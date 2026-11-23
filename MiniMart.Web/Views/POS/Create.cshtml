@@ -1,0 +1,148 @@
+@model MiniMart.Web.Models.POS
+
+@{
+    ViewData["Title"] = "Thêm mới POS";
+
+    // Tài khoản chỉ thuộc 1 siêu thị: ô siêu thị bị khóa, chỉ hiện đúng siêu thị của mình
+    // Tài khoản không thuộc siêu thị nào (MaST rỗng): chọn được tất cả siêu thị
+    bool gioiHanSieuThi = ViewBag.GioiHanSieuThi == true;
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Thêm Mới Thiết Bị POS
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Thêm mới thiết bị máy bán hàng vào hệ thống quản lý
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" id="btnResetForm" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-eraser me-1"></i> Xóa nhập liệu
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="posForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaPOS" class="form-label fw-semibold small text-secondary">Mã POS <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-code-square"></i></span>
+                                    <input asp-for="MaPOS" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập mã POS..." autocomplete="off" id="MaPOS" />
+                                </div>
+                                <span asp-validation-for="MaPOS" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenPOS" class="form-label fw-semibold small text-secondary">Tên POS <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-hdd-stack"></i></span>
+                                    <input asp-for="TenPOS" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên POS..." autocomplete="off" />
+                                </div>
+                                <span asp-validation-for="TenPOS" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="MaST" class="form-label fw-semibold small text-secondary">Siêu Thị Trực Thuộc <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-shop"></i></span>
+                                    <select asp-for="MaST" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachSieuThi" id="selectSieuThi" disabled="@gioiHanSieuThi">
+                                        @if (!gioiHanSieuThi)
+                                        {
+                                            <option value="">-- Chọn siêu thị trực thuộc --</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                @if (gioiHanSieuThi)
+                                {
+                                    @* Ô chọn bị khóa sẽ không được gửi đi, nên gửi siêu thị bằng ô ẩn (server vẫn ép lại theo tài khoản) *@
+                                    <input type="hidden" asp-for="MaST" />
+                                    <span class="text-muted" style="font-size: 0.75rem;">Bạn chỉ được thêm POS cho siêu thị của mình.</span>
+                                }
+
+                                <span asp-validation-for="MaST" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TrangThai" class="form-label fw-semibold small text-secondary">Trạng Thái Sử Dụng</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i id="iconTrangThai" class="bi fs-5"></i>
+                                    </span>
+                                    <select asp-for="TrangThai" class="form-select bg-light border-start-0" id="selectTrangThai">
+                                        <option value="1">Đã sử dụng</option>
+                                        <option value="0" selected>Chưa sử dụng</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end align-items-center border-top pt-3">
+                            <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Lưu thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        $(document).ready(function () {
+            var gioiHanSieuThi = @(gioiHanSieuThi ? "true" : "false");
+
+            function updateTrangThaiIcon() {
+                var val = $("#selectTrangThai").val();
+                var $icon = $("#iconTrangThai");
+                if (val == "1") {
+                    $icon.removeClass("bi-toggle-off text-danger").addClass("bi-toggle-on text-success");
+                } else {
+                    $icon.removeClass("bi-toggle-on text-success").addClass("bi-toggle-off text-danger");
+                }
+            }
+            updateTrangThaiIcon();
+            $("#selectTrangThai").on("change", updateTrangThaiIcon);
+
+            const clearModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('clearFormConfirmModal'));
+
+            $('#btnResetForm').on('click', function () {
+                clearModal.show();
+            });
+
+            $('#clearFormConfirmOk').on('click', function () {
+                clearModal.hide();
+                var $form = $('#posForm');
+                $form.find('input[type="text"]').val('');
+                if (!gioiHanSieuThi) $('#selectSieuThi').val(''); // tài khoản thuộc 1 siêu thị: giữ nguyên siêu thị của mình
+                $('#selectTrangThai').val('0');
+                updateTrangThaiIcon();
+                $form.find('.field-validation-error').empty();
+                $form.find('.input-validation-error').removeClass('input-validation-error');
+                $('#MaPOS').trigger('focus');
+            });
+        });
+    </script>
+}

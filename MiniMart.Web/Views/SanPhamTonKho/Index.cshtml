@@ -1,0 +1,678 @@
+﻿@model IEnumerable<MiniMart.Web.Models.SanPhamTonKho>
+@using MiniMart.Web.Helpers
+@using MiniMart.Web.Models
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Danh sách sản phẩm tồn kho";
+    bool gioiHanSieuThi = ViewBag.GioiHanSieuThi as bool? == true;
+    string? selectedMaST = ViewBag.SelectedMaST as string;
+    bool chiKhuyenMai = ViewBag.ChiKhuyenMai as bool? == true;
+    var dsSieuThi = ViewBag.DanhSachSieuThi as IEnumerable<SieuThi>;
+    var viVN = CultureInfo.GetCultureInfo("vi-VN");
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<style>
+    #tonKhoTable tbody tr { cursor: pointer; }
+    #tonKhoTable thead .filter-row th { cursor: default; }
+    #tonKhoTable thead .filter-row th::before,
+    #tonKhoTable thead .filter-row th::after { display: none !important; }
+
+    .top-filter-bar {
+        background-color: #f8f9fa;
+        border: 1px solid #eef0f2;
+        border-radius: 10px;
+        padding: 14px 18px;
+    }
+
+    .top-filter-col {
+        width: 380px;
+        max-width: 100%;
+    }
+
+    .top-filter-col .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #tonKhoTable th.col-tensp,
+    #tonKhoTable td.col-tensp {
+        min-width: 240px;
+    }
+
+    .price-range-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .price-range-row .form-control {
+        width: 74px;
+        padding-left: 4px;
+        padding-right: 4px;
+        font-size: 0.74rem;
+    }
+
+    #tonKhoTable thead .filter-row th {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-3">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- TIÊU ĐỀ & CÁC NÚT THAO TÁC -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+            <h3 class="fw-bold mb-1 text-success" style="color: #198754 !important;">
+                <i class="bi bi-boxes me-2"></i> Danh Sách Sản Phẩm Tồn Kho
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                @if (gioiHanSieuThi)
+                {
+                    <span>Theo dõi số lượng tồn, giá nhập, giá gốc, giá bán và trạng thái kinh doanh thuộc siêu thị của bạn</span>
+                }
+                else
+                {
+                    <span>Theo dõi số lượng tồn, giá nhập, giá gốc, giá bán và trạng thái kinh doanh trên toàn hệ thống</span>
+                }
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" id="btnXoaBoLoc" class="btn btn-outline-secondary fw-semibold bg-white shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa bộ lọc
+            </button>
+
+            <button type="button" id="btnXemKhuyenMai"
+                    class="btn btn-warning text-dark fw-bold shadow-sm"
+                    data-active="@(chiKhuyenMai ? "1" : "0")">
+                <i class="bi bi-percent me-1"></i> Xem Sản Phẩm Khuyến Mãi
+            </button>
+
+            @if (Html.HasPermission("WEB_HH_SPTK_DONGBO"))
+            {
+                <button type="button" id="btnOpenDongBoModal" class="btn btn-success fw-bold shadow-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> Đồng Bộ Sản Phẩm
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- THANH FILTER TRÊN: SIÊU THỊ & DANH MỤC -->
+    <div class="top-filter-bar mb-4">
+        <div class="d-flex flex-wrap align-items-end gap-4">
+            <div class="top-filter-col">
+                <label for="filterTopSieuThi" class="form-label fw-semibold small text-dark mb-1">
+                    <i class="bi bi-shop-window text-success me-1"></i> Siêu Thị
+                </label>
+                @if (gioiHanSieuThi)
+                {
+                    var tenSTHienTai = dsSieuThi?.FirstOrDefault(s => s.MaST == selectedMaST)?.TenST
+                        ?? Model?.FirstOrDefault()?.SieuThiNavigation?.TenST
+                        ?? selectedMaST ?? "";
+                    <select id="filterTopSieuThi" class="form-select form-select-sm bg-white" disabled>
+                        <option selected>@tenSTHienTai (@selectedMaST)</option>
+                    </select>
+                }
+                else
+                {
+                    <select id="filterTopSieuThi" class="form-select form-select-sm select2-top" style="width: 100%;">
+                        <option value="">Tất cả siêu thị</option>
+                        @if (dsSieuThi != null && dsSieuThi.Any())
+                        {
+                            @foreach (var st in dsSieuThi)
+                            {
+                                <option value="@st.MaST">@st.TenST (@st.MaST)</option>
+                            }
+                        }
+                        else if (Model != null)
+                        {
+                            @foreach (var st in Model
+                                .Select(x => new { MaST = x.MaST, TenST = x.SieuThiNavigation?.TenST ?? x.MaST })
+                                .GroupBy(x => x.MaST)
+                                .Select(g => g.First())
+                                .OrderBy(x => x.TenST))
+                            {
+                                <option value="@st.MaST">@st.TenST (@st.MaST)</option>
+                            }
+                        }
+                    </select>
+                }
+            </div>
+
+            <div class="top-filter-col">
+                <label for="filterTopDanhMuc" class="form-label fw-semibold small text-primary mb-1">
+                    <i class="bi bi-folder text-primary me-1"></i> Danh Mục
+                </label>
+                <select id="filterTopDanhMuc" class="form-select form-select-sm select2-top" style="width: 100%;">
+                    <option value="">Tất cả danh mục</option>
+                    @if (Model != null)
+                    {
+                        @foreach (var tenDM in Model
+                            .Select(x => x.SanPhamNavigation?.DanhMucNavigation?.TenDanhMuc)
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                            .Distinct()
+                            .OrderBy(x => x))
+                        {
+                            <option value="@tenDM">@tenDM</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG DỮ LIỆU -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table id="tonKhoTable" class="table table-hover table-bordered align-middle w-100">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="text-center" style="width: 4%;">STT</th>
+                            <th class="d-none">MaST</th>
+                            <th>Mã SP</th>
+                            <th class="col-tensp">Tên Sản Phẩm</th>
+                            <th class="d-none">Danh Mục</th>
+                            <th class="text-end">Giá Nhập</th>
+                            <th class="text-end">Giá Gốc</th>
+                            <th class="text-end">Giá Bán</th>
+                            <th class="text-end">Số Lượng Tồn</th>
+                            <th class="text-center">Trạng Thái Kinh Doanh</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th class="text-center"></th>
+                            <th class="d-none"></th>
+                            <th>
+                                <input type="text" class="form-control form-control-sm column-search"
+                                       data-col="2" placeholder="Nhập mã SP..." />
+                            </th>
+                            <th class="col-tensp">
+                                <input type="text" class="form-control form-control-sm column-search"
+                                       data-col="3" placeholder="Nhập tên sản phẩm..." />
+                            </th>
+                            <th class="d-none"></th>
+                            <th class="text-center">
+                                <div class="price-range-row">
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="5" data-bound="min" placeholder="Giá từ..." autocomplete="off" />
+                                    <span class="text-muted fw-bold">-</span>
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="5" data-bound="max" placeholder="... đến giá" autocomplete="off" />
+                                </div>
+                            </th>
+                            <th class="text-center">
+                                <div class="price-range-row">
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="6" data-bound="min" placeholder="Giá từ..." autocomplete="off" />
+                                    <span class="text-muted fw-bold">-</span>
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="6" data-bound="max" placeholder="... đến giá" autocomplete="off" />
+                                </div>
+                            </th>
+                            <th class="text-center">
+                                <div class="price-range-row">
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="7" data-bound="min" placeholder="Giá từ..." autocomplete="off" />
+                                    <span class="text-muted fw-bold">-</span>
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end price-range"
+                                           data-col="7" data-bound="max" placeholder="... đến giá" autocomplete="off" />
+                                </div>
+                            </th>
+                            <th class="text-center">
+                                <div class="price-range-row">
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end qty-range"
+                                           data-bound="min" placeholder="Từ..." autocomplete="off" />
+                                    <span class="text-muted fw-bold">-</span>
+                                    <input type="text" inputmode="numeric"
+                                           class="form-control form-control-sm text-end qty-range"
+                                           data-bound="max" placeholder="Đến..." autocomplete="off" />
+                                </div>
+                            </th>
+                            <th>
+                                <select class="form-select form-select-sm select2-filter" data-col="9" style="width: 100%;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="Đang kinh doanh">Đang kinh doanh</option>
+                                    <option value="Ngừng kinh doanh">Ngừng kinh doanh</option>
+                                </select>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            int chiSo = 1;
+                            foreach (var item in Model)
+                            {
+                                var tenDanhMuc = item.SanPhamNavigation?.DanhMucNavigation?.TenDanhMuc ?? "";
+                                var tenSanPham = item.SanPhamNavigation?.TenSP ?? item.MaSP;
+                                long giaNhapInt = Convert.ToInt64(Math.Round(item.GiaNhap, 0, MidpointRounding.AwayFromZero));
+                                long giaGocInt = Convert.ToInt64(Math.Round(item.GiaGoc, 0, MidpointRounding.AwayFromZero));
+                                long giaBanInt = Convert.ToInt64(Math.Round(item.GiaBan, 0, MidpointRounding.AwayFromZero));
+                                bool dangKhuyenMai = item.GiaGoc > item.GiaBan;
+
+                                <tr data-mast="@item.MaST"
+                                    data-masp="@item.MaSP"
+                                    data-gianhap="@giaNhapInt"
+                                    data-giagoc="@giaGocInt"
+                                    data-giaban="@giaBanInt"
+                                    data-soluongton="@item.SoLuongTon"
+                                    data-khuyenmai="@(dangKhuyenMai ? "1" : "0")">
+                                    <td class="text-center fw-semibold text-muted">@chiSo</td>
+                                    <td class="d-none">@item.MaST</td>
+                                    <td class="fw-bold text-success">@item.MaSP</td>
+                                    <td class="col-tensp fw-semibold text-dark">
+                                        @if (dangKhuyenMai)
+                                        {
+                                            <span class="badge bg-warning text-dark me-1">Khuyến Mãi</span>
+                                        }
+                                        @tenSanPham
+                                    </td>
+                                    <td class="d-none">@tenDanhMuc</td>
+                                    <td class="text-end text-muted" data-order="@giaNhapInt">
+                                        @giaNhapInt.ToString("N0", viVN) ₫
+                                    </td>
+                                    <td class="text-end @(dangKhuyenMai ? "text-decoration-line-through text-danger fw-normal" : "fw-semibold text-dark")"
+                                        data-order="@giaGocInt">
+                                        @giaGocInt.ToString("N0", viVN) ₫
+                                    </td>
+                                    <td class="text-end fw-bold text-success" data-order="@giaBanInt">
+                                        @giaBanInt.ToString("N0", viVN) ₫
+                                    </td>
+                                    <td class="text-end fw-bold" data-order="@item.SoLuongTon">
+                                        @item.SoLuongTon.ToString("N0", viVN)
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.TrangThaiKinhDoanh == 1)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                Đang kinh doanh
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                                Ngừng kinh doanh
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                chiSo++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Html.HasPermission("WEB_HH_SPTK_DONGBO"))
+{
+    <!-- MODAL XÁC NHẬN ĐỒNG BỘ SẢN PHẨM -->
+    <div class="modal fade" id="dongBoSanPhamModal" tabindex="-1" aria-labelledby="dongBoSanPhamModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                <div class="modal-header bg-success text-white py-3 px-4">
+                    <h5 class="modal-title fw-bold mb-0" id="dongBoSanPhamModalLabel">
+                        <i class="bi bi-arrow-repeat me-2"></i> Xác nhận đồng bộ sản phẩm tồn kho
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-controller="SanPhamTonKho" asp-action="DongBoSanPham" id="formDongBoSanPham">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body p-4">
+                        @if (gioiHanSieuThi)
+                        {
+                            var tenSTUser = dsSieuThi?.FirstOrDefault(s => s.MaST == selectedMaST)?.TenST
+                                ?? Model?.FirstOrDefault()?.SieuThiNavigation?.TenST
+                                ?? selectedMaST ?? "";
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Siêu thị đồng bộ</label>
+                                <input type="text" class="form-control bg-light fw-bold text-dark" value="@tenSTUser (@selectedMaST)" disabled />
+                                <input type="hidden" name="maST" value="@selectedMaST" />
+                            </div>
+                            <p class="text-dark mb-2">
+                                Bạn có chắc chắn muốn đồng bộ toàn bộ sản phẩm từ danh mục sản phẩm vào tồn kho của siêu thị <strong>@tenSTUser (@selectedMaST)</strong> không?
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label for="dongBoSelectMaST" class="form-label fw-semibold small text-dark">
+                                    <i class="bi bi-shop-window text-success me-1"></i> Chọn siêu thị cần đồng bộ
+                                </label>
+                                <select id="dongBoSelectMaST" name="maST" class="form-select select2-dongbo" style="width: 100%;">
+                                    <option value="">Tất cả siêu thị</option>
+                                    @if (dsSieuThi != null && dsSieuThi.Any())
+                                    {
+                                        @foreach (var st in dsSieuThi)
+                                        {
+                                            <option value="@st.MaST">@st.TenST (@st.MaST)</option>
+                                        }
+                                    }
+                                    else if (Model != null)
+                                    {
+                                        @foreach (var st in Model
+                                            .Select(x => new { MaST = x.MaST, TenST = x.SieuThiNavigation?.TenST ?? x.MaST })
+                                            .GroupBy(x => x.MaST)
+                                            .Select(g => g.First())
+                                            .OrderBy(x => x.TenST))
+                                        {
+                                            <option value="@st.MaST">@st.TenST (@st.MaST)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <p class="text-dark mb-2" id="dongBoDescText">
+                                Bạn có chắc chắn muốn đồng bộ toàn bộ sản phẩm từ danh mục sản phẩm sang bảng tồn kho cho <strong>tất cả siêu thị</strong> không?
+                            </p>
+                        }
+                        <p class="text-muted small mb-0">
+                            Các sản phẩm chưa có trong tồn kho sẽ được khởi tạo tự động và hiển thị ngay sau khi đồng bộ.
+                        </p>
+                    </div>
+                    <div class="modal-footer bg-light border-0 px-4 py-3">
+                        <button type="button" class="btn btn-outline-secondary fw-semibold px-3" data-bs-dismiss="modal">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i> Xác nhận đồng bộ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var promoOnly = $('#btnXemKhuyenMai').data('active') === '1';
+
+            function parseRawNumber(raw) {
+                if (raw === null || raw === undefined) return NaN;
+                const cleaned = String(raw).replace(/\D/g, '');
+                if (cleaned === '') return NaN;
+                const num = parseInt(cleaned, 10);
+                return isNaN(num) ? NaN : num;
+            }
+
+            function formatDongFilter(num) {
+                if (isNaN(num)) return '';
+                return num.toLocaleString('vi-VN') + ' ₫';
+            }
+
+            function formatQtyFilter(num) {
+                if (isNaN(num)) return '';
+                return num.toLocaleString('vi-VN');
+            }
+
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (settings.nTable.id !== 'tonKhoTable') return true;
+
+                var rowNode = settings.aoData[dataIndex]?.nTr;
+                if (!rowNode) return true;
+
+                if (promoOnly) {
+                    var isPromo = $(rowNode).data('khuyenmai') === 1 || $(rowNode).data('khuyenmai') === '1';
+                    if (!isPromo) return false;
+                }
+
+                var priceColumns = [
+                    { col: 5, attr: 'gianhap' },
+                    { col: 6, attr: 'giagoc' },
+                    { col: 7, attr: 'giaban' }
+                ];
+
+                for (var i = 0; i < priceColumns.length; i++) {
+                    var c = priceColumns[i];
+                    var minVal = parseRawNumber($('.price-range[data-col="' + c.col + '"][data-bound="min"]').val());
+                    var maxVal = parseRawNumber($('.price-range[data-col="' + c.col + '"][data-bound="max"]').val());
+                    var cellVal = parseFloat($(rowNode).data(c.attr));
+
+                    if (isNaN(cellVal)) continue;
+                    if (!isNaN(minVal) && cellVal < minVal) return false;
+                    if (!isNaN(maxVal) && cellVal > maxVal) return false;
+                }
+
+                var minQty = parseRawNumber($('.qty-range[data-bound="min"]').val());
+                var maxQty = parseRawNumber($('.qty-range[data-bound="max"]').val());
+                var qtyVal = parseFloat($(rowNode).data('soluongton'));
+
+                if (!isNaN(qtyVal)) {
+                    if (!isNaN(minQty) && qtyVal < minQty) return false;
+                    if (!isNaN(maxQty) && qtyVal > maxQty) return false;
+                }
+
+                return true;
+            });
+
+            var table = $('#tonKhoTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json",
+                    "searchPlaceholder": "Nhập tìm kiếm...",
+                    "emptyTable": "Không có dữ liệu sản phẩm tồn kho phù hợp."
+                },
+                "orderCellsTop": true,
+                "pageLength": 10,
+                "columnDefs": [
+                    { "orderable": false, "targets": [0] },
+                    { "visible": false, "targets": [1, 4] }
+                ],
+                "order": [[2, 'asc']]
+            });
+
+            table.on('draw.dt', function () {
+                var start = table.page.info().start;
+                table.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                    .nodes().each(function (cell, i) {
+                        cell.innerHTML = start + i + 1;
+                    });
+            }).draw();
+
+            $('.select2-top, .select2-filter').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+
+            $('#dongBoSelectMaST').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownParent: $('#dongBoSanPhamModal'),
+                minimumResultsForSearch: 0
+            });
+
+            $('.filter-row').on('click', 'input, select, .select2, .select2-selection', function (e) {
+                e.stopPropagation();
+            });
+
+            $('#filterTopSieuThi').on('change', function () {
+                var maST = $(this).val();
+                if (!maST) {
+                    table.column(1).search('').draw();
+                } else {
+                    var regex = '^\\s*' + $.fn.dataTable.util.escapeRegex(maST) + '\\s*$';
+                    table.column(1).search(regex, true, false).draw();
+                }
+            });
+
+            $('#filterTopDanhMuc').on('change', function () {
+                var tenDM = $(this).val();
+                if (!tenDM) {
+                    table.column(4).search('').draw();
+                } else {
+                    var regex = '^\\s*' + $.fn.dataTable.util.escapeRegex(tenDM) + '\\s*$';
+                    table.column(4).search(regex, true, false).draw();
+                }
+            });
+
+            $('.column-search').on('keyup change clear', function () {
+                table.column($(this).data('col')).search(this.value).draw();
+            });
+
+            $('.price-range').on('focus', function () {
+                const num = parseRawNumber($(this).val());
+                $(this).val(isNaN(num) ? '' : String(num));
+            });
+
+            $('.price-range').on('input', function () {
+                const cleaned = String($(this).val()).replace(/\D/g, '');
+                $(this).val(cleaned);
+                table.draw();
+            });
+
+            $('.price-range').on('blur change', function () {
+                const num = parseRawNumber($(this).val());
+                $(this).val(isNaN(num) ? '' : formatDongFilter(num));
+                table.draw();
+            });
+
+            $('.qty-range').on('focus', function () {
+                const num = parseRawNumber($(this).val());
+                $(this).val(isNaN(num) ? '' : String(num));
+            });
+
+            $('.qty-range').on('input', function () {
+                const cleaned = String($(this).val()).replace(/\D/g, '');
+                $(this).val(cleaned);
+                table.draw();
+            });
+
+            $('.qty-range').on('blur change', function () {
+                const num = parseRawNumber($(this).val());
+                $(this).val(isNaN(num) ? '' : formatQtyFilter(num));
+                table.draw();
+            });
+
+            $('.select2-filter').on('change', function () {
+                var colIndex = $(this).data('col');
+                var giaTri = $(this).val();
+                if (!giaTri) {
+                    table.column(colIndex).search('').draw();
+                } else {
+                    var regex = '^\\s*' + $.fn.dataTable.util.escapeRegex(giaTri) + '\\s*$';
+                    table.column(colIndex).search(regex, true, false).draw();
+                }
+            });
+
+            $('#btnXemKhuyenMai').on('click', function () {
+                promoOnly = true;
+                $(this).data('active', '1');
+                table.draw();
+            });
+
+            $('#btnXoaBoLoc').on('click', function () {
+                promoOnly = false;
+                $('#btnXemKhuyenMai').data('active', '0');
+
+                @if (!gioiHanSieuThi)
+                {
+                    <text>$('#filterTopSieuThi').val('').trigger('change.select2');</text>
+                }
+                $('#filterTopDanhMuc').val('').trigger('change.select2');
+                $('.column-search').val('');
+                $('.price-range').val('');
+                $('.qty-range').val('');
+                $('.select2-filter').val('').trigger('change.select2');
+
+                table.search('').columns().search('');
+                @if (gioiHanSieuThi && !string.IsNullOrEmpty(selectedMaST))
+                {
+                    <text>
+                    var stRegex = '^\\s*' + $.fn.dataTable.util.escapeRegex('@selectedMaST') + '\\s*$';
+                    table.column(1).search(stRegex, true, false);
+                    </text>
+                }
+                table.draw();
+            });
+
+            function updateDongBoDescription() {
+                var $sel = $('#dongBoSelectMaST');
+                if (!$sel.length) return;
+                var val = $sel.val();
+                var text = $sel.find('option:selected').text();
+                if (!val) {
+                    $('#dongBoDescText').html('Bạn có chắc chắn muốn đồng bộ toàn bộ sản phẩm từ danh mục sản phẩm sang bảng tồn kho cho <strong>tất cả siêu thị</strong> không?');
+                } else {
+                    $('#dongBoDescText').html('Bạn có chắc chắn muốn đồng bộ toàn bộ sản phẩm từ danh mục sản phẩm sang bảng tồn kho cho siêu thị <strong>' + $('<div>').text(text).html() + '</strong> không?');
+                }
+            }
+
+            $('#dongBoSelectMaST').on('change', updateDongBoDescription);
+
+            const dongBoModalEl = document.getElementById('dongBoSanPhamModal');
+            const dongBoModal = dongBoModalEl ? bootstrap.Modal.getOrCreateInstance(dongBoModalEl) : null;
+
+            $('#btnOpenDongBoModal').on('click', function () {
+                @if (!gioiHanSieuThi)
+                {
+                    <text>
+                    var currentTopMaST = $('#filterTopSieuThi').val() || '';
+                    $('#dongBoSelectMaST').val(currentTopMaST).trigger('change');
+                    </text>
+                }
+                if (dongBoModal) {
+                    dongBoModal.show();
+                }
+            });
+
+            $('#tonKhoTable tbody').on('click', 'tr', function () {
+                var maST = $(this).data('mast');
+                var maSP = $(this).data('masp');
+                if (!maST || !maSP) return;
+
+                @if (Html.HasPermission("WEB_HH_SPTK_XEM"))
+                {
+                    <text>
+                    window.location.href = '/SanPhamTonKho/Edit?maST=' + encodeURIComponent(maST) + '&maSP=' + encodeURIComponent(maSP);
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    var modalEl = document.getElementById('permissionErrorModal');
+                    if (modalEl) {
+                        var permissionModal = new bootstrap.Modal(modalEl);
+                        permissionModal.show();
+                    }
+                    </text>
+                }
+            });
+        });
+    </script>
+}

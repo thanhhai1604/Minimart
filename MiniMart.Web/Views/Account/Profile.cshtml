@@ -1,0 +1,275 @@
+@model MiniMart.Web.Models.NhanVien
+
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+}
+
+<style>
+    /* ===== Popup xác nhận nhẹ nhàng ===== */
+    .soft-modal-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #fff4d6;
+        color: #e0a100;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.9rem;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Tài Khoản Của Tôi
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Xem thông tin hồ sơ, cập nhật số điện thoại và đổi mật khẩu
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Nút khôi phục về dữ liệu ban đầu -->
+            <button type="button" id="btnResetProfile" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+            </button>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+
+                    @if (TempData["ThongBao"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show small mb-3" role="alert">
+                            <i class="bi bi-check-circle-fill me-1"></i> @TempData["ThongBao"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Profile" method="post" id="profileForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <!-- ===== THÔNG TIN HỒ SƠ ===== -->
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-person-vcard text-success me-2"></i> Thông tin hồ sơ
+                        </h6>
+
+                        <div class="row">
+                            <!-- Mã Nhân Viên -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mã Nhân Viên</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-code-square"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.MaNV" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Tên Nhân Viên -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Tên Nhân Viên</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.HoTen" disabled />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Tên Đăng Nhập -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Tên Đăng Nhập</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-at"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.TenDN" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Số Điện Thoại (cho phép sửa) -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SoDT" class="form-label fw-semibold small text-secondary">Số Điện Thoại</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-telephone"></i></span>
+                                    <input asp-for="SoDT" id="txtSoDT" data-original="@(ViewBag.SoDTGoc ?? Model.SoDT)" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập số điện thoại..." autocomplete="off" maxlength="10" inputmode="numeric" />
+                                </div>
+                                <span asp-validation-for="SoDT" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Vai Trò -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Vai Trò</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-shield-check"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@(Model.VaiTro != null ? Model.VaiTro.TenVaiTro : "Chưa phân vai trò")" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Siêu Thị Trực Thuộc -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Siêu Thị Trực Thuộc</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-shop"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@(Model.SieuThi != null ? Model.SieuThi.TenST : "Tất cả siêu thị")" disabled />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Trạng Thái -->
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label fw-semibold small text-secondary">Trạng Thái</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="bi fs-5 @(Model.TrangThai == 1 ? "bi-toggle-on text-success" : "bi-toggle-off text-danger")"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-light border-start-0 text-muted" value="@(Model.TrangThai == 1 ? "Đang làm việc" : "Ngừng làm việc")" disabled />
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-muted" style="font-size: 0.75rem;">
+                            Các thông tin hồ sơ còn lại do quản lý cập nhật. Bạn có thể tự sửa số điện thoại và đổi mật khẩu.
+                        </span>
+
+                        <hr class="my-4" />
+
+                        <!-- ===== ĐỔI MẬT KHẨU ===== -->
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-key-fill text-success me-2"></i> Đổi mật khẩu
+                            <span class="text-muted fw-normal small">(bỏ trống nếu không muốn đổi)</span>
+                        </h6>
+
+                        <div class="row">
+                            <!-- Mật khẩu hiện tại -->
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-semibold small text-secondary">Mật Khẩu Hiện Tại</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-lock"></i></span>
+                                    <input type="password" name="matKhauHienTai" class="form-control bg-light border-start-0 border-end-0 ps-0" placeholder="Nhập mật khẩu hiện tại..." autocomplete="current-password" />
+                                    <span class="input-group-text bg-light border-start-0 ps-2 pe-3 text-muted btn-toggle-pw" style="cursor: pointer;" title="Ẩn/Hiện mật khẩu">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                                @Html.ValidationMessage("matKhauHienTai", "", new { @class = "text-danger small" })
+                            </div>
+
+                            <!-- Mật khẩu mới -->
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-semibold small text-secondary">Mật Khẩu Mới</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-lock"></i></span>
+                                    <input type="password" name="MatKhau" class="form-control bg-light border-start-0 border-end-0 ps-0" placeholder="Ít nhất 6 ký tự..." autocomplete="new-password" />
+                                    <span class="input-group-text bg-light border-start-0 ps-2 pe-3 text-muted btn-toggle-pw" style="cursor: pointer;" title="Ẩn/Hiện mật khẩu">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                                @Html.ValidationMessage("MatKhau", "", new { @class = "text-danger small" })
+                            </div>
+
+                            <!-- Nhập lại mật khẩu mới -->
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label fw-semibold small text-secondary">Nhập Lại Mật Khẩu Mới</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-lock-fill"></i></span>
+                                    <input type="password" name="xacNhanMatKhau" class="form-control bg-light border-start-0 border-end-0 ps-0" placeholder="Nhập lại mật khẩu mới..." autocomplete="new-password" />
+                                    <span class="input-group-text bg-light border-start-0 ps-2 pe-3 text-muted btn-toggle-pw" style="cursor: pointer;" title="Ẩn/Hiện mật khẩu">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                                @Html.ValidationMessage("xacNhanMatKhau", "", new { @class = "text-danger small" })
+                            </div>
+                        </div>
+
+                        <!-- Thanh nút chức năng -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <a asp-controller="Account" asp-action="Logout" class="btn btn-outline-danger fw-bold shadow-sm px-3">
+                                <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                            </a>
+
+                            <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!-- POPUP XÁC NHẬN KHÔI PHỤC DỮ LIỆU BAN ĐẦU -->
+<!-- ================================================= -->
+<div class="modal fade" id="softConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-body text-center p-4 pb-3">
+                <div class="soft-modal-icon mb-3"><i class="bi bi-arrow-counterclockwise"></i></div>
+                <h5 class="fw-bold text-dark mb-2">Khôi phục dữ liệu ban đầu?</h5>
+                <p class="text-secondary mb-0">Số điện thoại sẽ quay về như lúc bạn mở trang này và các ô mật khẩu sẽ được làm trống.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light border px-4 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark px-4 fw-bold" id="softConfirmOk">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $('#txtSoDT').on('input', function () {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+
+            $('#btnResetProfile').on('click', function () {
+                softModal.show();
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+
+                var $form = $('#profileForm');
+                $('#txtSoDT').val($('#txtSoDT').attr('data-original') || '');
+
+                $form.find('input[name="matKhauHienTai"], input[name="MatKhau"], input[name="xacNhanMatKhau"]')
+                    .val('')
+                    .attr('type', 'password');
+                $form.find('.btn-toggle-pw i').removeClass('bi-eye').addClass('bi-eye-slash');
+
+                $form.find('.field-validation-error').empty();
+                $form.find('.input-validation-error').removeClass('input-validation-error');
+                $form.find('[data-valmsg-summary="true"] ul').empty();
+            });
+
+            $('.btn-toggle-pw').on('click', function () {
+                var $input = $(this).closest('.input-group').find('input');
+                var $icon = $(this).find('i');
+
+                if ($input.attr('type') === 'password') {
+                    $input.attr('type', 'text');
+                    $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                } else {
+                    $input.attr('type', 'password');
+                    $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                }
+            });
+        });
+    </script>
+}

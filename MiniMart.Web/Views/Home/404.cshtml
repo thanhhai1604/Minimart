@@ -1,0 +1,48 @@
+﻿@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Không tìm thấy trang";
+}
+
+<!-- Giảm khoảng cách phía trên bằng cách dùng py-3 và mt-2 -->
+<div class="container text-center py-3 mt-2 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <!-- Hình ảnh / Logo 404 -->
+            <div class="mb-2">
+                <div class="d-inline-flex align-items-center justify-content-center bg-white px-4 py-2 rounded-4 shadow-sm border" style="max-width: 640px;">
+                    <img src="~/Images/Branding/MiniMart_404.png" 
+                         alt="MiniMart 404" 
+                         class="img-fluid" 
+                         style="max-height: 350px; object-fit: contain;" />
+                </div>
+            </div>
+            
+            <p class="fw-bold text-secondary text-muted mb-4 px-3" style="font-size: 0.95rem; line-height: 1.5;">
+               Vui lòng kiểm tra lại đường dẫn, quay về trang chủ hoặc trang trước đó.
+            </p>
+
+            <!-- Nhóm nút điều hướng phân quyền thông minh -->
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                @if (Html.HasPermission("WEB_TONGQUAN"))
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
+                        <i class="bi bi-grid-1x2-fill me-1"></i> Về trang chủ
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
+                        <i class="bi bi-person-badge me-2"></i> Về trang chủ
+                    </a>
+                }
+
+                <button type="button" class="btn btn-light border fw-semibold px-4 py-2 text-secondary" onclick="history.back();">
+                    <i class="bi bi-arrow-left me-1"></i> Về trang trước
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>

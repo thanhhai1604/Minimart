@@ -1,0 +1,274 @@
+﻿@model MiniMart.Web.Models.DanhMuc
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Chi tiết danh mục sản phẩm";
+    var danhSachSanPham = ViewBag.DanhSachSanPham as List<MiniMart.Web.Models.SanPham> ?? new List<MiniMart.Web.Models.SanPham>();
+}
+
+<!-- Nhúng thư viện Select2 CSS & DataTables Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<style>
+    #sanPhamDanhMucTable thead .filter-row th {
+        cursor: default;
+    }
+    #sanPhamDanhMucTable thead .filter-row th::before,
+    #sanPhamDanhMucTable thead .filter-row th::after {
+        display: none !important;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Chi Tiết Danh Mục & Sản Phẩm
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa thông tin danh mục và danh sách sản phẩm trực thuộc
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Nút Khôi phục ban đầu kích hoạt Popup số 4 từ Layout -->
+            <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <!-- PHẦN TRÊN: FORM THÔNG TIN DANH MỤC -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-success text-white fw-bold py-3">
+                    <i class="bi bi-info-circle me-1"></i> Thông Tin Danh Mục
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaDM" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-secondary">Mã Danh Mục</label>
+                            <input type="text" class="form-control bg-light text-muted" value="@Model.MaDM" disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TenDanhMuc" class="form-label fw-semibold small text-secondary">Tên Danh Mục <span class="text-danger">*</span></label>
+                            <input asp-for="TenDanhMuc" class="form-control" id="TenDanhMuc" autocomplete="off" />
+                            <span asp-validation-for="TenDanhMuc" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Thanh nút chức năng -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+                            <div>
+                                @if (Html.HasPermission("WEB_HH_DM_XOA"))
+                                {
+                                    <button type="button" class="btn btn-danger text-white fw-bold shadow-sm px-3" id="btnOpenDeleteModal">
+                                        <i class="bi bi-trash me-1"></i> Xóa danh mục
+                                    </button>
+                                }
+                            </div>
+                            <div>
+                                @if (Html.HasPermission("WEB_HH_DM_SUA"))
+                                {
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN DƯỚI: DANH SÁCH SẢN PHẨM THUỘC DANH MỤC (CÓ FILTER & DATATABLES) -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-5">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+            <span class="fw-bold text-secondary">
+                <i class="bi bi-box-seam me-1"></i> Danh Sách Sản Phẩm Thuộc Danh Mục Này (@danhSachSanPham.Count sản phẩm)
+            </span>
+            <button id="btnXoaBoLocSP" class="btn btn-sm btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa bộ lọc
+            </button>
+        </div>
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table id="sanPhamDanhMucTable" class="table table-hover table-bordered align-middle mb-0 w-100">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="text-center" style="width: 5%;">STT</th>
+                            <th>Mã Sản Phẩm</th>
+                            <th>Mã vạch (UPC)</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Đơn Vị Tính</th>
+                            <th>Loại Sản Phẩm</th>
+                            <th>Thuế</th>
+                            <th>Thuế Suất</th>
+                        </tr>
+                        <!-- Dòng filter từng cột -->
+                        <tr class="filter-row">
+                            <th class="text-center"></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Nhập mã SP..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Nhập UPC..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="3" placeholder="Nhập tên..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="4" placeholder="Nhập ĐVT..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="5" placeholder="Nhập loại..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="6" placeholder="Nhập thuế..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="7" placeholder="Nhập thuế suất..." /></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (danhSachSanPham.Any())
+                        {
+                            int stt = 1;
+                            foreach (var sp in danhSachSanPham)
+                            {
+                                <tr>
+                                    <td class="text-center text-muted">@(stt++)</td>
+                                    <td class="fw-bold text-success">@sp.MaSP</td>
+                                    <td>@sp.UPC</td>
+                                    <td class="fw-semibold text-dark">@sp.TenSP</td>
+                                    <td>@sp.DonViTinh</td>
+                                    <td>@sp.LoaiSP</td>
+                                    <td>@(sp.ThueNavigation != null ? sp.ThueNavigation.TenThue : sp.MaThue)</td>
+                                    <td>
+ `                                       @if (sp.ThueNavigation != null)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold">
+                                                @(sp.ThueNavigation.ThueSuat * 100)% (@sp.ThueNavigation.ThueSuat)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa danh mục -->
+@if (Html.HasPermission("WEB_HH_DM_XOA"))
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa danh mục!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa danh mục này khỏi hệ thống?</p>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">Mã danh mục: <span class="text-dark fw-bold">@Model.MaDM</span></li>
+                            <li class="mb-0">Tên danh mục: <span class="text-dark fw-bold">@Model.TenDanhMuc</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" asp-route-id="@Model.MaDM" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Khởi tạo DataTables cho bảng sản phẩm thuộc danh mục
+            var table = $('#sanPhamDanhMucTable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json"
+                },
+                "orderCellsTop": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": 0 }
+                ],
+                "order": [[1, 'asc']]
+            });
+
+            // Tự động cập nhật STT khi phân trang hoặc lọc
+            table.on('draw.dt', function () {
+                var start = table.page.info().start;
+                table.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                    .nodes().each(function (cell, i) {
+                        cell.innerHTML = start + i + 1;
+                    });
+            }).draw();
+
+            $('.filter-row').on('click', 'input', function (e) {
+                e.stopPropagation();
+            });
+
+            // Lọc theo từng cột
+            $('.column-search').on('keyup change clear', function () {
+                var colIndex = $(this).data('col');
+                table.column(colIndex).search(this.value).draw();
+            });
+
+            // Xóa bộ lọc bảng sản phẩm
+            $('#btnXoaBoLocSP').on('click', function () {
+                $('.column-search').val('');
+                table.search('').columns().search('').draw();
+            });
+
+            const initialTenDanhMuc = $('#TenDanhMuc').val();
+
+            // Xử lý popup Khôi phục ban đầu (Popup số 4)
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+            $('#btnResetEdit').on('click', function () { 
+                softModal.show(); 
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+                $('#TenDanhMuc').val(initialTenDanhMuc);
+            });
+
+            // Xử lý Modal Xóa
+            const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+            const deleteModalElement = document.getElementById('deleteConfirmModal');
+            if (btnOpenDeleteModal && deleteModalElement) {
+                const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+                btnOpenDeleteModal.addEventListener('click', function () { 
+                    deleteModal.show(); 
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,144 @@
+@model MiniMart.Web.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Đăng Nhập";
+
+    // Dùng _Layout nhưng không hiện menu/banner/footer của layout.
+    // Nhờ vậy popup "Thông báo đăng nhập" (popup 1) chỉ cần định nghĩa một lần trong _Layout.
+    ViewData["BareLayout"] = true;
+}
+
+@section Styles {
+    <style>
+        .login-banner-container {
+            width: 100%;
+            background-color: #ffffff;
+            text-align: center;
+            border-bottom: 4px solid #ffc107;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .login-banner-img {
+            width: 100%;
+            height: auto;
+            max-height: 260px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 15px 90px 15px; 
+        }
+        .login-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: none;
+            width: 100%;
+            max-width: 480px;
+            padding: 30px;
+            position: relative;
+            z-index: 5;
+        }
+        .btn-success-green {
+            background-color: #198754;
+            color: #ffffff;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        .btn-success-green:hover {
+            background-color: #146c43;
+            color: #ffffff;
+        }
+        .form-control:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+        }
+        .footer-brand {
+            background-color: #ffffff !important;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+        .toggle-password {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover {
+            color: #198754 !important;
+        }
+    </style>
+}
+
+    <div class="login-banner-container">
+        <img src="~/Images/Branding/Minimart_Banner.png" class="login-banner-img" alt="MiniMart Banner System" />
+    </div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            <h4 class="text-center text-dark fw-bold mb-2">HỆ THỐNG QUẢN LÝ SIÊU THỊ</h4>
+            <p class="text-center text-muted small mb-4">Vui lòng đăng nhập tài khoản nhân sự để tiếp tục</p>
+            
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="TenDN" class="form-label small fw-bold text-secondary">Tên đăng nhập</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-success"></i></span>
+                        <input asp-for="TenDN" class="form-control bg-light" placeholder="Vui lòng nhập tên đăng nhập..." autocomplete="off" />
+                    </div>
+                    <span asp-validation-for="TenDN" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="MatKhau" class="form-label small fw-bold text-secondary">Mật khẩu</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-success"></i></span>
+                        <input asp-for="MatKhau" id="txtPassword" type="password" class="form-control border-end-0 bg-light" placeholder="Vui lòng nhập mật khẩu bảo mật..." />
+                        <span class="input-group-text bg-light border-start-0 toggle-password" id="btnTogglePassword">
+                            <i class="bi bi-eye-slash text-muted" id="iconToggle"></i>
+                        </span>
+                    </div>
+                    <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                </div>
+
+                <div class="form-check mb-4 small">
+                    <input asp-for="GhiNho" class="form-check-input" />
+                    <label asp-for="GhiNho" class="form-check-label text-muted">Duy trì đăng nhập</label>
+                </div>
+
+                <button type="submit" class="btn btn-success-green w-100 py-2.5 fw-bold shadow-sm rounded-3">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> ĐĂNG NHẬP
+                </button>
+            </form>
+            
+            <div class="text-center mt-4 pt-3 border-top text-muted" style="font-size: 0.8rem;">
+                <span>Hệ Thống Quản Lý Siêu Thị MiniMart &copy; 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-top footer-brand text-muted bg-white position-fixed bottom-0 w-100 py-2 text-center small">
+        &copy; 2026 - MiniMart System - Nền tảng điều hành chuỗi siêu thị bán lẻ thông minh
+    </footer>
+
+@section Scripts {
+    <script>
+        document.getElementById('btnTogglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('txtPassword');
+            const iconToggle = document.getElementById('iconToggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                iconToggle.classList.remove('bi-eye-slash');
+                iconToggle.classList.add('bi-eye');
+            } else {
+                passwordInput.type = 'password';
+                iconToggle.classList.remove('bi-eye');
+                iconToggle.classList.add('bi-eye-slash');
+            }
+        });
+    </script>
+}

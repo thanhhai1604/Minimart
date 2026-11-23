@@ -1,0 +1,245 @@
+@model MiniMart.Web.Models.NhanVien
+
+@{
+    ViewData["Title"] = "Thêm mới nhân viên";
+    bool gioiHanSieuThi = ViewBag.GioiHanSieuThi == true;
+    string maSTCuaToi = Context.Session.GetString("MaST") ?? "";
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Thêm Mới Nhân Viên
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Thêm mới hồ sơ nhân sự vào hệ thống quản lý
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" id="btnResetForm" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-eraser me-1"></i> Xóa nhập liệu
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="nhanVienForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaNV" class="form-label fw-semibold small text-secondary">Mã Nhân Viên <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-code-square"></i></span>
+                                    <input asp-for="MaNV" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập mã nhân viên..." autocomplete="off" />
+                                </div>
+                                <span asp-validation-for="MaNV" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="HoTen" class="form-label fw-semibold small text-secondary">Tên Nhân Viên <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-person"></i></span>
+                                    <input asp-for="HoTen" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên nhân viên..." autocomplete="off" id="HoTen" />
+                                </div>
+                                <span asp-validation-for="HoTen" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenDN" class="form-label fw-semibold small text-secondary">Tên Đăng Nhập <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-at"></i></span>
+                                    <input asp-for="TenDN" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên đăng nhập..." autocomplete="off" />
+                                </div>
+                                <span asp-validation-for="TenDN" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MatKhau" class="form-label fw-semibold small text-secondary">Mật Khẩu <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-lock"></i></span>
+                                    <input asp-for="MatKhau" type="password" id="txtPassword" class="form-control bg-light border-start-0 border-end-0 ps-0" placeholder="Nhập mật khẩu..." autocomplete="new-password" />
+                                    <span class="input-group-text bg-light border-start-0 ps-2 pe-3 text-muted" id="btnTogglePassword" style="cursor: pointer;" title="Ẩn/Hiện mật khẩu">
+                                        <i class="bi bi-eye-slash" id="iconToggle"></i>
+                                    </span>
+                                </div>
+                                <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SoDT" class="form-label fw-semibold small text-secondary">Số Điện Thoại</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-telephone"></i></span>
+                                    <input asp-for="SoDT" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập số điện thoại..." autocomplete="off" maxlength="10" />
+                                </div>
+                                <span asp-validation-for="SoDT" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaVaiTro" class="form-label fw-semibold small text-secondary">Vai Trò <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-shield-check"></i></span>
+                                    <select asp-for="MaVaiTro" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachVaiTro" id="selectVaiTro">
+                                        <option value="">-- Chọn vai trò nhân viên --</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="MaVaiTro" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="MaST" class="form-label fw-semibold small text-secondary">Siêu Thị Trực Thuộc <span class="text-danger" id="stAsterisk">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-shop"></i></span>
+                                    <select asp-for="MaST" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachSieuThi" id="selectSieuThi">
+                                        <option value="">-- Chọn siêu thị trực thuộc --</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="hdnMaSTLogin" value="@maSTCuaToi" />
+                                <span asp-validation-for="MaST" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TrangThai" class="form-label fw-semibold small text-secondary">Trạng Thái</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i id="iconTrangThai" class="bi fs-5"></i>
+                                    </span>
+                                    <select asp-for="TrangThai" class="form-select bg-light border-start-0" id="selectTrangThai">
+                                        <option value="1">Đang làm việc</option>
+                                        <option value="0">Ngừng làm việc</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end align-items-center border-top pt-3">
+                            <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Lưu thông tin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        $(document).ready(function () {
+            var gioiHanSieuThi = @(gioiHanSieuThi ? "true" : "false");
+            var maSTLogin = $("#hdnMaSTLogin").val();
+
+            function updateTrangThaiIcon() {
+                var val = $("#selectTrangThai").val();
+                var $icon = $("#iconTrangThai");
+                if (val == "1") {
+                    $icon.removeClass("bi-toggle-off text-danger").addClass("bi-toggle-on text-success");
+                } else {
+                    $icon.removeClass("bi-toggle-on text-success").addClass("bi-toggle-off text-danger");
+                }
+            }
+            updateTrangThaiIcon();
+            $("#selectTrangThai").on("change", updateTrangThaiIcon);
+
+            function handleSieuThiLogic() {
+                var tenVaiTro = $("#selectVaiTro option:selected").text().toLowerCase();
+                var $selectST = $("#selectSieuThi");
+                var $stAsterisk = $("#stAsterisk");
+
+                if (tenVaiTro.includes("quản lý hệ thống") || tenVaiTro.includes("admin")) {
+                    // Nếu là quản lý hệ thống: đổi placeholder thành "Tất cả siêu thị", chọn rỗng và khóa lại
+                    if ($("#selectSieuThi option[value='TAT_CA']").length === 0) {
+                        $selectST.prepend('<option value="" id="optTatCaSieuThi" selected>Tất cả siêu thị</option>');
+                    } else {
+                        $selectST.val("");
+                    }
+                    $selectST.prop("disabled", true);
+                    if ($stAsterisk.length) $stAsterisk.hide();
+                } else {
+                    $("#optTatCaSieuThi").remove();
+                    if (gioiHanSieuThi) {
+                        $selectST.val(maSTLogin).prop("disabled", true);
+                    } else {
+                        $selectST.prop("disabled", false);
+                        if (!$selectST.val()) {
+                            $selectST.find("option:first").text("-- Chọn siêu thị trực thuộc --");
+                        }
+                    }
+                    if ($stAsterisk.length) $stAsterisk.show();
+                }
+            }
+
+            handleSieuThiLogic();
+            $("#selectVaiTro").on("change", function () {
+                handleSieuThiLogic();
+            });
+
+            // Trước khi submit form, gỡ bỏ disabled của selectSieuThi nếu là quản lý hệ thống để gửi giá trị null lên server
+            $('#nhanVienForm').on('submit', function () {
+                $('#selectSieuThi').prop('disabled', false);
+            });
+
+            const clearModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('clearFormConfirmModal'));
+
+            $('#btnResetForm').on('click', function () {
+                clearModal.show();
+            });
+
+            $('#clearFormConfirmOk').on('click', function () {
+                clearModal.hide();
+                var $form = $('#nhanVienForm');
+                $form.find('input[type="text"], input[type="password"]').val('');
+                $('#selectVaiTro').val('');
+                if (gioiHanSieuThi) {
+                    $('#selectSieuThi').val(maSTLogin);
+                } else {
+                    $('#selectSieuThi').val('');
+                }
+                $('#selectTrangThai').val('1');
+                updateTrangThaiIcon();
+                handleSieuThiLogic();
+                $('#txtPassword').attr('type', 'password');
+                $('#iconToggle').removeClass('bi-eye').addClass('bi-eye-slash');
+                $form.find('.field-validation-error').empty();
+                $form.find('.input-validation-error').removeClass('input-validation-error');
+                $('input[name="MaNV"]').trigger('focus');
+            });
+
+            const btnTogglePassword = document.getElementById('btnTogglePassword');
+            if (btnTogglePassword) {
+                btnTogglePassword.addEventListener('click', function () {
+                    const passwordInput = document.getElementById('txtPassword');
+                    const iconToggle = document.getElementById('iconToggle');
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        iconToggle.classList.remove('bi-eye-slash');
+                        iconToggle.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        iconToggle.classList.remove('bi-eye');
+                        iconToggle.classList.add('bi-eye-slash');
+                    }
+                });
+            }
+        });
+    </script>
+}

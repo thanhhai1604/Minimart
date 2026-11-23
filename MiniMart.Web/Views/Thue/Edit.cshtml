@@ -1,0 +1,176 @@
+﻿@model MiniMart.Web.Models.Thue
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Cập nhật mức thuế";
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Cập Nhật Mức Thuế
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa thông tin mức thuế suất hệ thống
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <!-- Nút Khôi phục ban đầu kích hoạt Popup số 4 từ Layout -->
+            <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaThue" />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mã Thuế</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-code-square"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@(Model != null ? Model.MaThue : "")" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TenThue" class="form-label fw-semibold small text-secondary">Tên Thuế <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-receipt"></i></span>
+                                    <input asp-for="TenThue" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên thuế..." autocomplete="off" id="TenThue" />
+                                </div>
+                                <span asp-validation-for="TenThue" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="ThueSuat" class="form-label fw-semibold small text-secondary">Thuế Suất (Ví dụ: 0.1) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-percent"></i></span>
+                                    <input asp-for="ThueSuat" type="number" step="0.01" min="0" max="1" class="form-control bg-light border-start-0 ps-0" id="ThueSuat" />
+                                </div>
+                                <span asp-validation-for="ThueSuat" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TrangThai" class="form-label fw-semibold small text-secondary">Trạng Thái</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-toggle-on"></i></span>
+                                    <select asp-for="TrangThai" class="form-select bg-light border-start-0" id="TrangThai">
+                                        <option value="1">Hoạt động</option>
+                                        <option value="0">Ngừng hoạt động</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thanh nút chức năng: Có nút Xóa và nút Lưu thay đổi theo phân quyền -->
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <div>
+                                @if (Html.HasPermission("WEB_HH_THUE_XOA"))
+                                {
+                                    <button type="button" class="btn btn-danger text-white fw-bold shadow-sm px-3" id="btnOpenDeleteModal">
+                                        <i class="bi bi-trash me-1"></i> Xóa mức thuế
+                                    </button>
+                                }
+                            </div>
+
+                            <div>
+                                @if (Html.HasPermission("WEB_HH_THUE_SUA"))
+                                {
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Html.HasPermission("WEB_HH_THUE_XOA"))
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa mức thuế!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa mức thuế này khỏi hệ thống?</p>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">Mã thuế: <span class="text-dark fw-bold">@(Model != null ? Model.MaThue : "")</span></li>
+                            <li class="mb-2">Tên thuế: <span class="text-dark fw-bold">@(Model != null ? Model.TenThue : "")</span></li>
+                            <li class="mb-2">Thuế suất: <span class="text-success fw-bold">@(Model != null ? (Model.ThueSuat * 100) : 0)%</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" asp-route-id="@(Model != null ? Model.MaThue : "")" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            const initialValues = {
+                TenThue: $('#TenThue').val(),
+                ThueSuat: $('#ThueSuat').val(),
+                TrangThai: $('#TrangThai').val()
+            };
+
+            // ===== Gọi Popup số 4 từ Layout chung (id="softConfirmModal") =====
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+            
+            $('#btnResetEdit').on('click', function () { 
+                softModal.show(); 
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+                $('#TenThue').val(initialValues.TenThue);
+                $('#ThueSuat').val(initialValues.ThueSuat);
+                $('#TrangThai').val(initialValues.TrangThai);
+            });
+
+            const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+            const deleteModalElement = document.getElementById('deleteConfirmModal');
+            if (btnOpenDeleteModal && deleteModalElement) {
+                const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+                btnOpenDeleteModal.addEventListener('click', function () { deleteModal.show(); });
+            }
+        });
+    </script>
+}

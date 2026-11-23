@@ -1,0 +1,312 @@
+﻿@model MiniMart.Web.Models.KhachHang
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Cập nhật khách hàng";
+    bool coSua = Html.HasPermission("WEB_KH_SUA");
+    bool laKhachVangLai = ViewBag.LaKhachVangLai as bool? == true;
+    var danhSachHoaDon = ViewBag.DanhSachHoaDon as List<MiniMart.Web.Models.HoaDon>;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Cập Nhật Thông Tin Khách Hàng
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa hồ sơ hội viên và theo dõi lịch sử mua hàng
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (coSua)
+            {
+                <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+                </button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Form thông tin khách hàng -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaKH" />
+                        @if (laKhachVangLai)
+                        {
+                            <input type="hidden" asp-for="TenKH" />
+                        }
+
+                        <fieldset disabled="@(!coSua)">
+
+                        <!-- Bố cục 2 cột cân đối tuyệt đối -->
+                        <div class="row">
+                            <!-- CỘT TRÁI: Mã khách hàng + 3 ô điểm -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small text-secondary">Mã Khách Hàng</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-code-square"></i></span>
+                                        <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.MaKH" disabled />
+                                    </div>
+                                </div>
+
+                                <!-- 3 ô điểm nằm bên trái, ngay dưới Mã khách hàng -->
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="mb-2">
+                                        <label asp-for="DiemTichLuy" class="form-label fw-semibold small text-success mb-1">Điểm Tích Lũy</label>
+                                        <input asp-for="DiemTichLuy" class="form-control bg-success-subtle text-success fw-bold text-center" readonly />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label asp-for="DiemSuDung" class="form-label fw-semibold small text-warning-emphasis mb-1">Điểm Sử Dụng</label>
+                                        <input asp-for="DiemSuDung" class="form-control bg-warning-subtle text-warning-emphasis fw-bold text-center" readonly />
+                                    </div>
+                                    <div class="mb-0">
+                                        <label asp-for="DiemKhaDung" class="form-label fw-semibold small text-primary mb-1">Điểm Khả Dụng</label>
+                                        <input value="@Model.DiemKhaDung" class="form-control bg-primary-subtle text-primary fw-bold text-center" readonly />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CỘT PHẢI: Họ tên + Số điện thoại + Email + Địa chỉ (dạng input text) -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="TenKH" class="form-label fw-semibold small text-secondary">Họ Tên Khách Hàng <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-person"></i></span>
+                                        @if (laKhachVangLai)
+                                        {
+                                            <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.TenKH" disabled id="TenKH" />
+                                        }
+                                        else
+                                        {
+                                            <input asp-for="TenKH" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập họ tên khách hàng..." autocomplete="off" id="TenKH" />
+                                        }
+                                    </div>
+                                    @if (!laKhachVangLai)
+                                    {
+                                        <span asp-validation-for="TenKH" class="text-danger small"></span>
+                                    }
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="SoDT" class="form-label fw-semibold small text-secondary">Số Điện Thoại</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-telephone"></i></span>
+                                        <input asp-for="SoDT" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập số điện thoại..." autocomplete="off" maxlength="11" id="SoDT" />
+                                    </div>
+                                    <span asp-validation-for="SoDT" class="text-danger small"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label fw-semibold small text-secondary">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-envelope"></i></span>
+                                        <input asp-for="Email" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập địa chỉ email..." autocomplete="off" id="Email" />
+                                    </div>
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+
+                                <!-- Địa chỉ đổi thành input text field đơn dòng -->
+                                <div class="mb-3">
+                                    <label asp-for="DiaChi" class="form-label fw-semibold small text-secondary">Địa Chỉ</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-geo-alt"></i></span>
+                                        <input asp-for="DiaChi" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập địa chỉ khách hàng..." autocomplete="off" id="DiaChi" />
+                                    </div>
+                                    <span asp-validation-for="DiaChi" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        </fieldset>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+                            <div>
+                                @if (Html.HasPermission("WEB_KH_XOA") && !laKhachVangLai)
+                                {
+                                    <button type="button" class="btn btn-danger text-white fw-bold shadow-sm px-3" id="btnOpenDeleteModal">
+                                        <i class="bi bi-trash me-1"></i> Xóa khách hàng
+                                    </button>
+                                }
+                            </div>
+
+                            <div>
+                                @if (coSua)
+                                {
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danh sách hóa đơn đã mua phía dưới -->
+            <div class="card border-0 shadow-sm rounded-3 mb-5">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-receipt me-2"></i> Lịch Sử Mua Hàng Của Khách Hàng</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table id="hoaDonTable" class="table table-hover table-bordered align-middle w-100">
+                            <thead class="table-light text-secondary">
+                                <tr>
+                                    <th class="text-center" style="width: 5%;">STT</th>
+                                    <th>Mã Hóa Đơn</th>
+                                    <th>Thời Gian Mua</th>
+                                    <th class="text-end">Tiền Trước Thuế</th>
+                                    <th class="text-end">Tiền Thuế</th>
+                                    <th class="text-end">Tổng Tiền</th>
+                                    <th>Địa Chỉ Giao Hàng</th>
+                                    <th>Siêu Thị</th>
+                                </tr>
+                                <tr class="filter-row">
+                                    <th class="text-center"></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Mã HĐ..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Thời gian..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="3" placeholder="Tiền trước thuế..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="4" placeholder="Tiền thuế..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="5" placeholder="Tổng tiền..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="6" placeholder="Địa chỉ..." /></th>
+                                    <th><input type="text" class="form-control form-control-sm column-search" data-col="7" placeholder="Siêu thị..." /></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (danhSachHoaDon != null && danhSachHoaDon.Any())
+                                {
+                                    int stt = 1;
+                                    foreach (var hd in danhSachHoaDon)
+                                    {
+                                        <tr>
+                                            <td class="text-center fw-semibold text-muted">@stt</td>
+                                            <td class="fw-bold text-success">@hd.MaHD</td>
+                                            <td>@hd.NgayLap.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-end">@hd.TongTienTruocThue.ToString("N0")</td>
+                                            <td class="text-end">@hd.TongTienThue.ToString("N0")</td>
+                                            <td class="text-end fw-bold text-primary">@hd.TongTien.ToString("N0")</td>
+                                            <td>@hd.DiaChiGiaoHang</td>
+                                            <td><span class="badge bg-secondary">@(hd.SieuThiNavigation != null ? hd.SieuThiNavigation.TenST : hd.MaST)</span></td>
+                                        </tr>
+                                        stt++;
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Html.HasPermission("WEB_KH_XOA") && !laKhachVangLai)
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa khách hàng!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa khách hàng sau khỏi hệ thống?</p>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">Mã khách hàng: <span class="text-dark fw-bold">@Model.MaKH</span></li>
+                            <li class="mb-2">Họ tên: <span class="text-dark fw-bold">@Model.TenKH</span></li>
+                            <li class="mb-2">Số điện thoại: <span class="text-dark fw-bold">@(string.IsNullOrEmpty(Model.SoDT) ? "Chưa cập nhật" : Model.SoDT)</span></li>
+                            <li class="mb-2">Địa chỉ: <span class="text-dark fw-bold">@(string.IsNullOrEmpty(Model.DiaChi) ? "Chưa cập nhật" : Model.DiaChi)</span></li>
+                            <li class="mb-0">Điểm khả dụng: <span class="text-primary fw-bold">@Model.DiemKhaDung.ToString("N0")</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" asp-route-id="@Model.MaKH" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(document).ready(function () {
+            var hdTable = $('#hoaDonTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" },
+                "orderCellsTop": true,
+                "columnDefs": [{ "orderable": false, "targets": 0 }],
+                "order": [[2, 'desc']]
+            });
+
+            hdTable.on('draw.dt', function () {
+                var start = hdTable.page.info().start;
+                hdTable.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                    .nodes().each(function (cell, i) { cell.innerHTML = start + i + 1; });
+            }).draw();
+
+            $('#hoaDonTable thead').on('click', 'input, select', function (e) {
+                e.stopPropagation();
+            });
+
+            $('#hoaDonTable .column-search').on('keyup change clear', function () {
+                hdTable.column($(this).data('col')).search(this.value).draw();
+            });
+
+            const initialValues = {
+                TenKH: $('#TenKH').val(),
+                SoDT: $('#SoDT').val(),
+                Email: $('#Email').val(),
+                DiaChi: $('#DiaChi').val()
+            };
+
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+
+            $('#btnResetEdit').on('click', function () {
+                softModal.show();
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+                @if (!laKhachVangLai)
+                {
+                    <text>$('#TenKH').val(initialValues.TenKH);</text>
+                }
+                $('#SoDT').val(initialValues.SoDT);
+                $('#Email').val(initialValues.Email);
+                $('#DiaChi').val(initialValues.DiaChi);
+            });
+
+            const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+            const deleteModalElement = document.getElementById('deleteConfirmModal');
+            if (btnOpenDeleteModal && deleteModalElement) {
+                const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+                btnOpenDeleteModal.addEventListener('click', function () { deleteModal.show(); });
+            }
+        });
+    </script>
+}

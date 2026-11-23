@@ -1,0 +1,137 @@
+﻿@model IEnumerable<MiniMart.Web.Models.DanhMuc>
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Danh sách danh mục";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<style>
+    #danhMucTable tbody tr { cursor: pointer; }
+    #danhMucTable thead .filter-row th { cursor: default; }
+    #danhMucTable thead .filter-row th::before,
+    #danhMucTable thead .filter-row th::after { display: none !important; }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                <i class="bi bi-folder-fill me-2"></i> Quản Lý Danh Mục Hàng Hóa
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Quản lý các nhóm danh mục sản phẩm trong hệ thống
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btnXoaBoLoc" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa bộ lọc
+            </button>
+            
+            @if (Html.HasPermission("WEB_HH_DM_THEM"))
+            {
+                <a asp-action="Create" class="btn btn-success fw-bold shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm danh mục
+                </a>
+            }
+        </div>
+    </div>
+    <hr />
+
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-5">
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table id="danhMucTable" class="table table-hover table-bordered align-middle w-100">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="text-center" style="width: 5%;">STT</th>
+                            <th>Mã Danh Mục</th>
+                            <th>Tên Danh Mục</th>
+                            <th class="text-center">Số Lượng Sản Phẩm</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th class="text-center"></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Nhập mã DM..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Nhập tên danh mục..." /></th>
+                            <th class="text-center"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            int chiSo = 1;
+                            foreach (var item in Model)
+                            {
+                                <tr data-id="@item.MaDM">
+                                    <td class="text-center fw-semibold text-muted">@chiSo</td>
+                                    <td class="fw-bold text-success">@item.MaDM</td>
+                                    <td class="fw-semibold text-dark">@item.TenDanhMuc</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">
+                                            @item.SanPhams?.Count() sản phẩm
+                                        </span>
+                                    </td>
+                                </tr>
+                                chiSo++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#danhMucTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" },
+                "orderCellsTop": true,
+                "columnDefs": [{ "orderable": false, "targets": 0 }],
+                "order": [[1, 'asc']]
+            });
+
+            table.on('draw.dt', function () {
+                var start = table.page.info().start;
+                table.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                    .nodes().each(function (cell, i) { cell.innerHTML = start + i + 1; });
+            }).draw();
+
+            $('.filter-row').on('click', 'input, select', function (e) { e.stopPropagation(); });
+
+            $('.column-search').on('keyup change clear', function () {
+                table.column($(this).data('col')).search(this.value).draw();
+            });
+
+            $('#btnXoaBoLoc').on('click', function () {
+                $('.column-search').val('');
+                table.search('').columns().search('').draw();
+            });
+
+            $('#danhMucTable tbody').on('click', 'tr', function () {
+                @if (Html.HasPermission("WEB_HH_DM_XEM"))
+                {
+                    <text>
+                    var maDM = $(this).data('id');
+                    if (maDM) { window.location.href = '/DanhMuc/Edit/' + maDM; }
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    var permissionModal = new bootstrap.Modal(document.getElementById('permissionErrorModal'));
+                    permissionModal.show();
+                    </text>
+                }
+            });
+        });
+    </script>
+}

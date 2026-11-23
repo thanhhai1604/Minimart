@@ -1,0 +1,307 @@
+@model MiniMart.Web.Models.NhanVien
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Cập nhật nhân viên";
+    bool coSua = Html.HasPermission("WEB_QL_NV_SUA");
+    bool gioiHanSieuThi = ViewBag.GioiHanSieuThi == true;
+    string maSTCuaToi = Context.Session.GetString("MaST") ?? "";
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Cập Nhật Nhân Viên
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa thông tin hồ sơ nhân sự hệ thống
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (coSua)
+            {
+                <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+                </button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaNV" />
+
+                        <fieldset disabled="@(!coSua)">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mã Nhân Viên</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-code-square"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.MaNV" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="HoTen" class="form-label fw-semibold small text-secondary">Tên Nhân Viên <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-person"></i></span>
+                                    <input asp-for="HoTen" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên nhân viên..." autocomplete="off" id="HoTen" />
+                                </div>
+                                <span asp-validation-for="HoTen" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Tên Đăng Nhập</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-at"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.TenDN" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MatKhau" class="form-label fw-semibold small text-secondary">Mật Khẩu Mới (Bỏ trống nếu giữ nguyên)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-lock"></i></span>
+                                    <input asp-for="MatKhau" type="password" id="txtPassword" class="form-control bg-light border-start-0 border-end-0 ps-0" placeholder="Nhập mật khẩu mới..." autocomplete="new-password" />
+                                    <span class="input-group-text bg-light border-start-0 ps-2 pe-3 text-muted" id="btnTogglePassword" style="cursor: pointer;" title="Ẩn/Hiện mật khẩu">
+                                        <i class="bi bi-eye-slash" id="iconToggle"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SoDT" class="form-label fw-semibold small text-secondary">Số Điện Thoại</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-telephone"></i></span>
+                                    <input asp-for="SoDT" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập số điện thoại..." autocomplete="off" maxlength="10" />
+                                </div>
+                                <span asp-validation-for="SoDT" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaVaiTro" class="form-label fw-semibold small text-secondary">Vai Trò <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-shield-check"></i></span>
+                                    <select asp-for="MaVaiTro" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachVaiTro" id="selectVaiTro">
+                                        <option value="">-- Chọn vai trò nhân viên --</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="MaVaiTro" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="MaST" class="form-label fw-semibold small text-secondary">Siêu Thị Trực Thuộc <span class="text-danger" id="stAsterisk">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-shop"></i></span>
+                                    <select asp-for="MaST" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachSieuThi" id="selectSieuThi">
+                                        <option value="">-- Chọn siêu thị trực thuộc --</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="hdnMaSTLogin" value="@maSTCuaToi" />
+                                <span asp-validation-for="MaST" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="TrangThai" class="form-label fw-semibold small text-secondary">Trạng Thái</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i id="iconTrangThai" class="bi fs-5"></i>
+                                    </span>
+                                    <select asp-for="TrangThai" class="form-select bg-light border-start-0" id="selectTrangThai">
+                                        <option value="1">Đang làm việc</option>
+                                        <option value="0">Ngừng làm việc</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        </fieldset>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <div>
+                                @if (Html.HasPermission("WEB_QL_NV_XOA"))
+                                {
+                                    <button type="button" class="btn btn-danger text-white fw-bold shadow-sm px-3" id="btnOpenDeleteModal">
+                                        <i class="bi bi-trash me-1"></i> Xóa nhân viên
+                                    </button>
+                                }
+                            </div>
+
+                            <div>
+                                @if (coSua)
+                                {
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Html.HasPermission("WEB_QL_NV_XOA"))
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa nhân viên!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa nhân viên sau khỏi hệ thống?</p>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">Mã nhân viên: <span class="text-dark fw-bold">@Model.MaNV</span></li>
+                            <li class="mb-2">Tên nhân viên: <span class="text-dark fw-bold">@Model.HoTen</span></li>
+                            <li class="mb-2">
+                                Siêu thị trực thuộc: 
+                                <span class="text-primary fw-bold">
+                                    @(Model.SieuThi != null ? Model.SieuThi.TenST : (Model.MaST ?? "Tất cả siêu thị"))
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" asp-route-id="@Model.MaNV" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(document).ready(function () {
+            var gioiHanSieuThi = @(gioiHanSieuThi ? "true" : "false");
+            var maSTLogin = $("#hdnMaSTLogin").val();
+
+            const initialValues = {
+                HoTen: $('#HoTen').val(),
+                SoDT: $('[name="SoDT"]').val(),
+                MaVaiTro: $('#selectVaiTro').val(),
+                MaST: $('#selectSieuThi').val(),
+                TrangThai: $('#selectTrangThai').val()
+            };
+
+            function updateTrangThaiIcon() {
+                var val = $("#selectTrangThai").val();
+                var $icon = $("#iconTrangThai");
+                if (val == "1") {
+                    $icon.removeClass("bi-toggle-off text-danger").addClass("bi-toggle-on text-success");
+                } else {
+                    $icon.removeClass("bi-toggle-on text-success").addClass("bi-toggle-off text-danger");
+                }
+            }
+            updateTrangThaiIcon();
+            $("#selectTrangThai").on("change", updateTrangThaiIcon);
+
+            function handleSieuThiLogic() {
+                var tenVaiTro = $("#selectVaiTro option:selected").text().toLowerCase();
+                var $selectST = $("#selectSieuThi");
+                var $stAsterisk = $("#stAsterisk");
+
+                if (tenVaiTro.includes("quản lý hệ thống") || tenVaiTro.includes("admin")) {
+                    if ($("#selectSieuThi option[value='TAT_CA']").length === 0) {
+                        $selectST.prepend('<option value="" id="optTatCaSieuThi" selected>Tất cả siêu thị</option>');
+                    } else {
+                        $selectST.val("");
+                    }
+                    $selectST.prop("disabled", true);
+                    if ($stAsterisk.length) $stAsterisk.hide();
+                } else {
+                    $("#optTatCaSieuThi").remove();
+                    if (gioiHanSieuThi) {
+                        $selectST.val(maSTLogin).prop("disabled", true);
+                    } else {
+                        $selectST.prop("disabled", false);
+                    }
+                    if ($stAsterisk.length) $stAsterisk.show();
+                }
+            }
+
+            handleSieuThiLogic();
+            $("#selectVaiTro").on("change", function () {
+                handleSieuThiLogic();
+            });
+
+            // Trước khi submit, mở khóa selectSieuThi nếu cần thiết
+            $('#editForm').on('submit', function () {
+                $('#selectSieuThi').prop('disabled', false);
+            });
+
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+            
+            $('#btnResetEdit').on('click', function () { 
+                softModal.show(); 
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+                $('#HoTen').val(initialValues.HoTen);
+                $('[name="SoDT"]').val(initialValues.SoDT);
+                $('#selectTrangThai').val(initialValues.TrangThai).trigger('change');
+                $('#selectSieuThi').val(initialValues.MaST);
+                $('#selectVaiTro').val(initialValues.MaVaiTro).trigger('change');
+                handleSieuThiLogic();
+                $('#txtPassword').val('').attr('type', 'password');
+                $('#iconToggle').removeClass('bi-eye').addClass('bi-eye-slash');
+            });
+
+            const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+            const deleteModalElement = document.getElementById('deleteConfirmModal');
+            if (btnOpenDeleteModal && deleteModalElement) {
+                const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+                btnOpenDeleteModal.addEventListener('click', function () { deleteModal.show(); });
+            }
+
+            const btnTogglePassword = document.getElementById('btnTogglePassword');
+            if (btnTogglePassword) {
+                btnTogglePassword.addEventListener('click', function () {
+                    const passwordInput = document.getElementById('txtPassword');
+                    const iconToggle = document.getElementById('iconToggle');
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                        iconToggle.classList.remove('bi-eye-slash');
+                        iconToggle.classList.add('bi-eye');
+                    } else {
+                        passwordInput.type = 'password';
+                        iconToggle.classList.remove('bi-eye');
+                        iconToggle.classList.add('bi-eye-slash');
+                    }
+                });
+            }
+        });
+    </script>
+}

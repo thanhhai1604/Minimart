@@ -1,0 +1,283 @@
+@model MiniMart.Web.Models.VaiTroDetails
+
+@{
+    ViewData["Title"] = "Thêm mới vai trò";
+    var webQuyens = Model?.DanhSachQuyen?.Where(x => x.NenTang == "WEB").ToList() ?? new List<PhanQuyenCheckbox>();
+    var posQuyens = Model?.DanhSachQuyen?.Where(x => x.NenTang == "POS").ToList() ?? new List<PhanQuyenCheckbox>();
+}
+
+<style>
+    /* ===== Menu trái: màu khi chọn ===== */
+    #roleTabList .list-group-item {
+        color: #495057;
+        background-color: transparent;
+        transition: background-color .15s, color .15s;
+    }
+    #roleTabList .list-group-item:hover {
+        background-color: #f1f8f4;
+        color: #198754;
+    }
+    #roleTabList .list-group-item.active {
+        background-color: #e8f5e9;
+        color: #146c43;
+        box-shadow: inset 4px 0 0 #198754;
+    }
+    #roleTabList .list-group-item.active i {
+        color: #198754 !important;
+    }
+
+    /* ===== Tab nền tảng (Back Office / POS) ===== */
+    #platformTab .nav-link {
+        color: #495057;
+        background-color: #f1f3f5;
+    }
+    #platformTab .nav-link:hover {
+        background-color: #e8f5e9;
+        color: #198754 !important;
+    }
+    #platformTab .nav-link.active,
+    #platformTab .nav-link.active:hover {
+        background-color: #198754;
+        color: #ffffff !important;
+    }
+
+    /* ===== Giới hạn chiều cao TreeView (~30 dòng) có scrollbar riêng ===== */
+    .treeview-scroll-box {
+        max-height: 450px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        background-color: #f8f9fa;
+        padding: 12px;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <form asp-action="Create" method="post" id="vaiTroForm">
+        @Html.AntiForgeryToken()
+
+        <!-- Tiêu đề và nút Quay lại -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                    <i class="bi bi-shield-lock-fill me-2"></i> Thêm Mới Vai Trò
+                </h3>
+                <p class="text-success fw-bold small mb-0">Thiết lập thông tin vai trò và phân quyền hệ thống</p>
+            </div>
+            <div class="d-flex gap-2">
+                <!-- Nút Xóa nhập liệu kích hoạt Popup số 5 từ Layout chung -->
+                <button type="button" class="btn btn-outline-secondary fw-semibold shadow-sm" id="btnXoaNhapLieu">
+                    <i class="bi bi-eraser me-1"></i> Xóa nhập liệu
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+        </div>
+        <hr />
+
+        <div class="row">
+            <!-- LEFT SIDE PANEL -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-2">
+                        <div class="list-group list-group-flush rounded-2" id="roleTabList" role="tablist">
+                            <a class="list-group-item list-group-item-action active fw-semibold py-3 border-0 rounded-2 mb-1" id="tab-thong-tin" data-bs-toggle="list" href="#content-thong-tin" role="tab">
+                                <i class="bi bi-info-circle-fill me-2 text-success"></i> Thông tin vai trò
+                            </a>
+                            <a class="list-group-item list-group-item-action fw-semibold py-3 border-0 rounded-2" id="tab-phan-quyen" data-bs-toggle="list" href="#content-phan-quyen" role="tab">
+                                <i class="bi bi-key-fill me-2 text-success"></i> Phân quyền vai trò
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT CONTENT AREA -->
+            <div class="col-md-9">
+                <div class="tab-content">
+
+                    <!-- TAB 1: THÔNG TIN VAI TRÒ -->
+                    <div class="tab-pane fade show active" id="content-thong-tin" role="tabpanel">
+                        <div class="card border-0 shadow-sm rounded-3 mb-4">
+                            <div class="card-header bg-white py-3 border-0">
+                                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-card-text me-2 text-success"></i> Thông tin chung</h5>
+                            </div>
+                            <div class="card-body px-4 pb-4 pt-0">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="MaVaiTro" class="form-label fw-semibold small text-secondary">Mã Vai Trò <span class="text-danger">*</span></label>
+                                        <input asp-for="MaVaiTro" class="form-control bg-light" placeholder="Nhập mã vai trò (VD: VT_QL)..." autocomplete="off" />
+                                        <span asp-validation-for="MaVaiTro" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="TenVaiTro" class="form-label fw-semibold small text-secondary">Tên Vai Trò <span class="text-danger">*</span></label>
+                                        <input asp-for="TenVaiTro" class="form-control bg-light" placeholder="Nhập tên vai trò..." autocomplete="off" />
+                                        <span asp-validation-for="TenVaiTro" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-2">
+                                        <label asp-for="MoTa" class="form-label fw-semibold small text-secondary">Mô Tả Vai Trò</label>
+                                        <textarea asp-for="MoTa" class="form-control bg-light" rows="3" placeholder="Nhập mô tả chi tiết về chức năng, quyền hạn của vai trò này..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: PHÂN QUYỀN VAI TRÒ -->
+                    <div class="tab-pane fade" id="content-phan-quyen" role="tabpanel">
+                        <div class="card border-0 shadow-sm rounded-3 mb-4">
+                            <div class="card-header bg-white py-3 border-0">
+                                <ul class="nav nav-pills card-header-pills gap-2" id="platformTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active fw-semibold px-4 py-2" id="backoffice-tab" data-bs-toggle="pill" data-bs-target="#backoffice-pane" type="button" role="tab">
+                                            <i class="bi bi-laptop me-1"></i> Back Office (Web)
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link fw-semibold px-4 py-2" id="pos-tab" data-bs-toggle="pill" data-bs-target="#pos-pane" type="button" role="tab">
+                                            <i class="bi bi-shop me-1"></i> POS (Máy bán hàng)
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <div class="tab-content" id="platformTabContent">
+
+                                    <!-- TAB PANE BACK OFFICE -->
+                                    <div class="tab-pane fade show active" id="backoffice-pane" role="tabpanel">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                            <div class="alert alert-light border small text-muted mb-0 py-2">
+                                                <i class="bi bi-info-circle text-primary me-1"></i> Tích chọn các quyền hạn cho phép nền tảng Back Office.
+                                            </div>
+                                            <!-- Cụm nút điều khiển tách biệt cho Back Office -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="btn-group btn-group-sm shadow-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-success fw-semibold" id="btnSelectAllWeb">
+                                                        <i class="bi bi-check2-all me-1"></i> Chọn tất cả
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger fw-semibold" id="btnDeselectAllWeb">
+                                                        <i class="bi bi-x-lg me-1"></i> Bỏ chọn
+                                                    </button>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm px-3" id="btnToggleExpandWeb" title="Thu gọn / Mở rộng">
+                                                    <i class="bi bi-arrows-expand me-1" id="iconExpandWeb"></i> <span id="textExpandWeb">Mở rộng</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="treeview-container treeview-scroll-box" id="treeBoxWeb">
+                                            <partial name="_PermissionTreePartial" model="webQuyens" />
+                                        </div>
+                                    </div>
+
+                                    <!-- TAB PANE POS -->
+                                    <div class="tab-pane fade" id="pos-pane" role="tabpanel">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                            <div class="alert alert-light border small text-muted mb-0 py-2">
+                                                <i class="bi bi-info-circle text-primary me-1"></i> Tích chọn các quyền hạn cho phép nền tảng POS bán hàng.
+                                            </div>
+                                            <!-- Cụm nút điều khiển tách biệt cho POS -->
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="btn-group btn-group-sm shadow-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-success fw-semibold" id="btnSelectAllPos">
+                                                        <i class="bi bi-check2-all me-1"></i> Chọn tất cả
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger fw-semibold" id="btnDeselectAllPos">
+                                                        <i class="bi bi-x-lg me-1"></i> Bỏ chọn
+                                                    </button>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-dark btn-sm fw-semibold shadow-sm px-3" id="btnToggleExpandPos" title="Thu gọn / Mở rộng">
+                                                    <i class="bi bi-arrows-expand me-1" id="iconExpandPos"></i> <span id="textExpandPos">Mở rộng</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="treeview-container treeview-scroll-box" id="treeBoxPos">
+                                            <partial name="_PermissionTreePartial" model="posQuyens" />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CTA BUTTON BAR -->
+                <div class="card border-0 shadow-sm rounded-3 mb-5">
+                    <div class="card-body d-flex justify-content-end align-items-center py-3">
+                        <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                            <i class="bi bi-save me-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Lấy instance của Popup số 5 từ Layout chung (id="clearFormConfirmModal")
+            var clearModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('clearFormConfirmModal'));
+
+            // Khi bấm nút "Xóa nhập liệu" ở trang Create thì bật Modal từ Layout lên
+            $('#btnXoaNhapLieu').on('click', function () {
+                clearModal.show();
+            });
+
+            // Khi người dùng bấm nút xác nhận "Xóa nhập liệu" trên Modal chung
+            $('#clearFormConfirmOk').on('click', function () {
+                clearModal.hide();
+                var $form = $('#vaiTroForm');
+                $form.find('input[type="text"], textarea').val('');
+                $form.find('input[type="checkbox"]').prop('checked', false);
+                $form.find('.text-danger.field-validation-error').empty();
+                $form.find('.input-validation-error').removeClass('input-validation-error');
+                bootstrap.Tab.getOrCreateInstance(document.getElementById('tab-thong-tin')).show();
+                $form.find('input[name="MaVaiTro"]').trigger('focus');
+            });
+
+            // Chọn tất cả / Bỏ chọn độc lập cho từng tab TreeView
+            $('#btnSelectAllWeb').on('click', function () {
+                $('#backoffice-pane input[type="checkbox"]').prop('checked', true).trigger('change');
+            });
+            $('#btnDeselectAllWeb').on('click', function () {
+                $('#backoffice-pane input[type="checkbox"]').prop('checked', false).trigger('change');
+            });
+
+            $('#btnSelectAllPos').on('click', function () {
+                $('#pos-pane input[type="checkbox"]').prop('checked', true).trigger('change');
+            });
+            $('#btnDeselectAllPos').on('click', function () {
+                $('#pos-pane input[type="checkbox"]').prop('checked', false).trigger('change');
+            });
+
+            // Toggle Expand / Collapse độc lập
+            function setupToggleExpand(btnId, boxId, iconId, textId) {
+                let isExpanded = true;
+
+                $(btnId).on('click', function () {
+                    isExpanded = !isExpanded;
+                    let $box = $(boxId);
+                    if (isExpanded) {
+                        $box.find('.collapse, .submenu, ul').addClass('show show-sub').css('display', 'block');
+                        $(iconId).removeClass('bi-arrows-expand').addClass('bi-arrows-collapse');
+                        $(textId).text('Thu gọn');
+                    } else {
+                        $box.find('.collapse, .submenu, ul').removeClass('show show-sub').css('display', 'none');
+                        $(iconId).removeClass('bi-arrows-collapse').addClass('bi-arrows-expand');
+                        $(textId).text('Mở rộng');
+                    }
+                });
+            }
+
+            setupToggleExpand('#btnToggleExpandWeb', '#treeBoxWeb', '#iconExpandWeb', '#textExpandWeb');
+            setupToggleExpand('#btnToggleExpandPos', '#treeBoxPos', '#iconExpandPos', '#textExpandPos');
+        });
+    </script>
+}

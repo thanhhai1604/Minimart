@@ -1,0 +1,609 @@
+﻿@model MiniMart.Web.Models.SanPhamTonKho
+@using MiniMart.Web.Helpers
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Cập nhật sản phẩm tồn kho";
+    bool coCapNhat = Html.HasPermission("WEB_HH_SPTK_CAPNHAT");
+    bool coXoa = Html.HasPermission("WEB_HH_SPTK_XOA");
+    var tenSieuThi = Model.SieuThiNavigation?.TenST ?? Model.MaST;
+    var tenSanPham = Model.SanPhamNavigation?.TenSP ?? Model.MaSP;
+    var tenDanhMuc = Model.SanPhamNavigation?.DanhMucNavigation?.TenDanhMuc ?? "---";
+    string trangThaiClass = Model.TrangThaiKinhDoanh == 1 ? "text-success" : "text-danger";
+    bool dangKhuyenMaiBanDau = Model.GiaGoc > Model.GiaBan;
+
+    var viVN = CultureInfo.GetCultureInfo("vi-VN");
+    long giaNhapInt = Convert.ToInt64(Math.Round(Model.GiaNhap, 0, MidpointRounding.AwayFromZero));
+    long giaGocInt = Convert.ToInt64(Math.Round(Model.GiaGoc, 0, MidpointRounding.AwayFromZero));
+    long giaBanInt = Convert.ToInt64(Math.Round(Model.GiaBan, 0, MidpointRounding.AwayFromZero));
+}
+
+<style>
+    .edit-sp-name-box {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+
+    .edit-sp-name-box .sp-name-display {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        cursor: not-allowed;
+    }
+
+    .edit-sp-name-box .sp-name-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .edit-sp-name-box .badge {
+        flex-shrink: 0;
+    }
+
+    .changed-row {
+        background-color: #fff3cd !important;
+    }
+
+    @@media (min-width: 576px) {
+        #deleteTonKhoConfirmModal .modal-dialog {
+            max-width: 600px;
+        }
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Cập Nhật Sản Phẩm Tồn Kho
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa giá nhập, giá gốc, giá bán, số lượng tồn và trạng thái kinh doanh tại siêu thị
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (coCapNhat)
+            {
+                <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+                </button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editTonKhoForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaST" />
+                        <input type="hidden" asp-for="MaSP" />
+                        <input type="hidden" asp-for="GiaNhap" id="GiaNhapHidden" value="@giaNhapInt.ToString(CultureInfo.InvariantCulture)" />
+                        <input type="hidden" asp-for="GiaGoc" id="GiaGocHidden" value="@giaGocInt.ToString(CultureInfo.InvariantCulture)" />
+                        <input type="hidden" asp-for="GiaBan" id="GiaBanHidden" value="@giaBanInt.ToString(CultureInfo.InvariantCulture)" />
+                        <input type="hidden" asp-for="SoLuongTon" id="SoLuongTonHidden" value="@Model.SoLuongTon.ToString(CultureInfo.InvariantCulture)" />
+
+                        <!-- ROW 1: Mã sản phẩm (1/3) - Tên sản phẩm (2/3) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mã Sản Phẩm</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success">
+                                        <i class="bi bi-code-square"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 fw-bold text-success" value="@Model.MaSP" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Tên Sản Phẩm</label>
+                                <div class="input-group edit-sp-name-box">
+                                    <span class="input-group-text bg-light border-end-0 text-dark">
+                                        <i class="bi bi-box"></i>
+                                    </span>
+                                    <div class="form-control bg-light border-start-0 sp-name-display" title="@tenSanPham">
+                                        <span id="editKhuyenMaiTag"
+                                              class="badge bg-warning text-dark fw-semibold px-2 py-1 @(dangKhuyenMaiBanDau ? "" : "d-none")">
+                                            Khuyến mãi
+                                        </span>
+                                        <span class="fw-semibold text-dark sp-name-text">@tenSanPham</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ROW 2: Danh mục (1/3) - Siêu thị (2/3) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Danh Mục</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-primary">
+                                        <i class="bi bi-folder"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 fw-semibold text-primary" value="@tenDanhMuc" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Siêu Thị</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary">
+                                        <i class="bi bi-shop-window"></i>
+                                    </span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 fw-semibold text-dark" value="@tenSieuThi (@Model.MaST)" disabled />
+                                </div>
+                            </div>
+                        </div>
+
+                        <fieldset disabled="@(!coCapNhat)">
+                            <!-- ROW 3: Giá nhập (1/3) - Giá gốc (1/3) - Giá bán (1/3) -->
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="GiaNhapInput" class="form-label fw-semibold small text-secondary">
+                                        Giá Nhập <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-secondary">
+                                            <i class="bi bi-receipt"></i>
+                                        </span>
+                                        <input type="text"
+                                               inputmode="numeric"
+                                               class="form-control bg-light border-start-0 ps-0 fw-semibold text-dark currency-input"
+                                               id="GiaNhapInput"
+                                               value="@(giaNhapInt.ToString("N0", viVN) + " ₫")"
+                                               autocomplete="off" />
+                                    </div>
+                                    <span asp-validation-for="GiaNhap" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="GiaGocInput" class="form-label fw-semibold small text-secondary">
+                                        Giá Gốc <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-primary">
+                                            <i class="bi bi-cash-stack"></i>
+                                        </span>
+                                        <input type="text"
+                                               inputmode="numeric"
+                                               class="form-control bg-light border-start-0 ps-0 fw-semibold text-primary currency-input"
+                                               id="GiaGocInput"
+                                               value="@(giaGocInt.ToString("N0", viVN) + " ₫")"
+                                               autocomplete="off" />
+                                    </div>
+                                    <span asp-validation-for="GiaGoc" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="GiaBanInput" class="form-label fw-semibold small text-secondary">
+                                        Giá Bán <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success">
+                                            <i class="bi bi-tag"></i>
+                                        </span>
+                                        <input type="text"
+                                               inputmode="numeric"
+                                               class="form-control bg-light border-start-0 ps-0 fw-bold text-success currency-input"
+                                               id="GiaBanInput"
+                                               value="@(giaBanInt.ToString("N0", viVN) + " ₫")"
+                                               autocomplete="off" />
+                                    </div>
+                                    <span asp-validation-for="GiaBan" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <!-- ROW 4: Số lượng tồn (1/2) - Trạng thái kinh doanh (1/2) -->
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="SoLuongTonInput" class="form-label fw-semibold small text-secondary">
+                                        Số Lượng Tồn <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-dark">
+                                            <i class="bi bi-stack"></i>
+                                        </span>
+                                        <input type="text"
+                                               inputmode="numeric"
+                                               class="form-control bg-light border-start-0 ps-0 fw-bold text-dark qty-input"
+                                               id="SoLuongTonInput"
+                                               value="@Model.SoLuongTon.ToString("N0", viVN)"
+                                               autocomplete="off" />
+                                    </div>
+                                    <span asp-validation-for="SoLuongTon" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label asp-for="TrangThaiKinhDoanh" class="form-label fw-semibold small text-secondary">
+                                        Trạng Thái Kinh Doanh
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 @trangThaiClass" id="trangThaiIconBox">
+                                            <i class="bi bi-toggle-on" id="trangThaiIcon"></i>
+                                        </span>
+                                        <select asp-for="TrangThaiKinhDoanh" class="form-select bg-light border-start-0 fw-semibold @trangThaiClass" id="TrangThaiKinhDoanh">
+                                            <option value="1" class="text-success">Đang kinh doanh</option>
+                                            <option value="0" class="text-danger">Ngừng kinh doanh</option>
+                                        </select>
+                                    </div>
+                                    <span asp-validation-for="TrangThaiKinhDoanh" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <div>
+                                @if (coXoa)
+                                {
+                                    <button type="button" id="btnOpenDeleteTonKhoModal" class="btn btn-danger text-white fw-bold shadow-sm px-3">
+                                        <i class="bi bi-trash me-1"></i> Xóa sản phẩm tồn kho
+                                    </button>
+                                }
+                            </div>
+
+                            <div>
+                                @if (coCapNhat)
+                                {
+                                    <button type="button" id="btnOpenUpdateConfirm" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Cập nhật tồn kho
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (coXoa)
+{
+    <!-- POPUP XÁC NHẬN XÓA SẢN PHẨM TỒN KHO -->
+    <div class="modal fade" id="deleteTonKhoConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa sản phẩm tồn kho!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa sản phẩm tồn kho sau khỏi siêu thị?</p>
+                    <div class="bg-light p-3 rounded-3 border small">
+                        <div class="mb-2">
+                            <span class="text-muted">Siêu thị:</span>
+                            <span class="text-dark fw-bold ms-1">@tenSieuThi</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">Mã sản phẩm:</span>
+                            <span class="text-success fw-bold ms-1">@Model.MaSP</span>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted">Tên sản phẩm:</span>
+                            @if (dangKhuyenMaiBanDau)
+                            {
+                                <span class="badge bg-warning text-dark fw-semibold ms-1">Khuyến mãi</span>
+                            }
+                            <span class="text-dark fw-bold ms-1">@tenSanPham</span>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <span class="text-muted">Giá nhập:</span>
+                                <span class="text-dark fw-bold ms-1">@giaNhapInt.ToString("N0", viVN) ₫</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted">Giá gốc:</span>
+                                <span class="text-primary fw-bold ms-1">@giaGocInt.ToString("N0", viVN) ₫</span>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <span class="text-muted">Giá bán:</span>
+                                <span class="text-success fw-bold ms-1">@giaBanInt.ToString("N0", viVN) ₫</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted">Số lượng tồn:</span>
+                                <span class="text-dark fw-bold ms-1">@Model.SoLuongTon.ToString("N0", viVN)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="maST" value="@Model.MaST" />
+                        <input type="hidden" name="maSP" value="@Model.MaSP" />
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (coCapNhat)
+{
+    <!-- POPUP XÁC NHẬN CẬP NHẬT TỒN KHO -->
+    <div class="modal fade" id="updateTonKhoConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                <div class="modal-header bg-success text-white py-3 px-4">
+                    <h5 class="modal-title fw-bold mb-0">
+                        <i class="bi bi-clipboard-check me-2"></i> Xác nhận cập nhật tồn kho
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="bg-light p-3 rounded-3 border mb-3">
+                        <h6 class="fw-bold text-dark mb-2">Thông tin:</h6>
+                        <div class="small mb-2">
+                            <span class="text-muted">Siêu thị:</span>
+                            <span class="fw-bold text-dark ms-1">@tenSieuThi</span>
+                        </div>
+                        <div class="small mb-2">
+                            <span class="text-muted">Mã sản phẩm:</span>
+                            <span class="fw-bold text-success ms-1">@Model.MaSP</span>
+                        </div>
+                        <div class="small mb-2">
+                            <span class="text-muted">Tên sản phẩm:</span>
+                            <span id="modalKhuyenMaiTag"
+                                  class="badge bg-warning text-dark fw-semibold ms-1 @(dangKhuyenMaiBanDau ? "" : "d-none")">
+                                Khuyến mãi
+                            </span>
+                            <span class="fw-bold text-dark ms-1">@tenSanPham</span>
+                        </div>
+                        <div class="small">
+                            <span class="text-muted">Trạng thái kinh doanh:</span>
+                            <span class="fw-bold ms-1" id="previewTrangThai"></span>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-2">Thông tin trước và sau điều chỉnh:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Thông tin</th>
+                                    <th class="text-end">Trước điều chỉnh</th>
+                                    <th class="text-end">Sau điều chỉnh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="rowGiaNhap">
+                                    <td class="fw-semibold">Giá nhập</td>
+                                    <td class="text-end text-muted" id="oldGiaNhap">@giaNhapInt.ToString("N0", viVN) ₫</td>
+                                    <td class="text-end fw-bold text-dark" id="newGiaNhap"></td>
+                                </tr>
+                                <tr id="rowGiaGoc">
+                                    <td class="fw-semibold">Giá gốc</td>
+                                    <td class="text-end text-muted" id="oldGiaGoc">@giaGocInt.ToString("N0", viVN) ₫</td>
+                                    <td class="text-end fw-bold text-primary" id="newGiaGoc"></td>
+                                </tr>
+                                <tr id="rowGiaBan">
+                                    <td class="fw-semibold">Giá bán</td>
+                                    <td class="text-end text-muted" id="oldGiaBan">@giaBanInt.ToString("N0", viVN) ₫</td>
+                                    <td class="text-end fw-bold text-success" id="newGiaBan"></td>
+                                </tr>
+                                <tr id="rowSoLuongTon">
+                                    <td class="fw-semibold">Số lượng tồn</td>
+                                    <td class="text-end text-muted" id="oldSoLuongTon">@Model.SoLuongTon.ToString("N0", viVN)</td>
+                                    <td class="text-end fw-bold text-dark" id="newSoLuongTon"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary fw-semibold px-3" data-bs-dismiss="modal">
+                        Hủy bỏ
+                    </button>
+                    <button type="button" id="btnConfirmSubmitTonKho" class="btn btn-success fw-bold px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Xác nhận cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(document).ready(function () {
+            function parseIntNumber(raw) {
+                if (raw === null || raw === undefined) return 0;
+                const cleaned = String(raw).replace(/[^\d-]/g, '');
+                const parsed = parseInt(cleaned, 10);
+                return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+            }
+
+            function formatCurrencyDong(num) {
+                return parseIntNumber(num).toLocaleString('vi-VN') + ' ₫';
+            }
+
+            function formatQty(num) {
+                return parseIntNumber(num).toLocaleString('vi-VN');
+            }
+
+            function syncHiddenInputs() {
+                $('#GiaNhapHidden').val(parseIntNumber($('#GiaNhapInput').val()));
+                $('#GiaGocHidden').val(parseIntNumber($('#GiaGocInput').val()));
+                $('#GiaBanHidden').val(parseIntNumber($('#GiaBanInput').val()));
+                $('#SoLuongTonHidden').val(parseIntNumber($('#SoLuongTonInput').val()));
+            }
+
+            const initialValues = {
+                GiaNhap: parseIntNumber($('#GiaNhapInput').val()),
+                GiaGoc: parseIntNumber($('#GiaGocInput').val()),
+                GiaBan: parseIntNumber($('#GiaBanInput').val()),
+                SoLuongTon: parseIntNumber($('#SoLuongTonInput').val()),
+                TrangThaiKinhDoanh: $('#TrangThaiKinhDoanh').val()
+            };
+
+            function updateKhuyenMaiBadges() {
+                const newGiaGoc = parseIntNumber($('#GiaGocInput').val());
+                const newGiaBan = parseIntNumber($('#GiaBanInput').val());
+                const oldGiaGoc = initialValues.GiaGoc;
+                const oldGiaBan = initialValues.GiaBan;
+
+                const isEditPromo = newGiaBan < newGiaGoc;
+                const isModalPromo =
+                    (newGiaBan < newGiaGoc) ||
+                    (newGiaBan < oldGiaGoc) ||
+                    (oldGiaBan < newGiaGoc) ||
+                    (oldGiaBan < oldGiaGoc);
+
+                $('#editKhuyenMaiTag').toggleClass('d-none', !isEditPromo);
+                $('#modalKhuyenMaiTag').toggleClass('d-none', !isModalPromo);
+            }
+
+            function applyTrangThaiColor() {
+                const val = $('#TrangThaiKinhDoanh').val();
+                const $select = $('#TrangThaiKinhDoanh');
+                const $iconBox = $('#trangThaiIconBox');
+
+                $select.removeClass('text-success text-danger');
+                $iconBox.removeClass('text-success text-danger');
+
+                if (val === '1') {
+                    $select.addClass('text-success');
+                    $iconBox.addClass('text-success');
+                } else {
+                    $select.addClass('text-danger');
+                    $iconBox.addClass('text-danger');
+                }
+            }
+
+            $('.currency-input').on('focus', function () {
+                const num = parseIntNumber($(this).val());
+                $(this).val(num > 0 ? String(num) : '');
+                syncHiddenInputs();
+            });
+
+            $('.currency-input').on('input', function () {
+                const cleaned = String($(this).val()).replace(/\D/g, '');
+                $(this).val(cleaned);
+                syncHiddenInputs();
+                updateKhuyenMaiBadges();
+            });
+
+            $('.currency-input').on('blur change', function () {
+                const num = parseIntNumber($(this).val());
+                $(this).val(formatCurrencyDong(num));
+                syncHiddenInputs();
+                updateKhuyenMaiBadges();
+            });
+
+            $('.qty-input').on('focus', function () {
+                const num = parseIntNumber($(this).val());
+                $(this).val(num > 0 ? String(num) : '');
+                syncHiddenInputs();
+            });
+
+            $('.qty-input').on('input', function () {
+                const cleaned = String($(this).val()).replace(/\D/g, '');
+                $(this).val(cleaned);
+                syncHiddenInputs();
+            });
+
+            $('.qty-input').on('blur change', function () {
+                const num = parseIntNumber($(this).val());
+                $(this).val(formatQty(num));
+                syncHiddenInputs();
+            });
+
+            applyTrangThaiColor();
+            syncHiddenInputs();
+            updateKhuyenMaiBadges();
+            $('#TrangThaiKinhDoanh').on('change', applyTrangThaiColor);
+
+            const softModalEl = document.getElementById('softConfirmModal');
+            const softModal = softModalEl ? bootstrap.Modal.getOrCreateInstance(softModalEl) : null;
+
+            $('#btnResetEdit').on('click', function () {
+                if (softModal) softModal.show();
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                if (softModal) softModal.hide();
+                $('#GiaNhapInput').val(formatCurrencyDong(initialValues.GiaNhap));
+                $('#GiaGocInput').val(formatCurrencyDong(initialValues.GiaGoc));
+                $('#GiaBanInput').val(formatCurrencyDong(initialValues.GiaBan));
+                $('#SoLuongTonInput').val(formatQty(initialValues.SoLuongTon));
+                $('#TrangThaiKinhDoanh').val(initialValues.TrangThaiKinhDoanh);
+                applyTrangThaiColor();
+                syncHiddenInputs();
+                updateKhuyenMaiBadges();
+            });
+
+            const deleteTonKhoModalEl = document.getElementById('deleteTonKhoConfirmModal');
+            const deleteTonKhoModal = deleteTonKhoModalEl ? bootstrap.Modal.getOrCreateInstance(deleteTonKhoModalEl) : null;
+
+            $('#btnOpenDeleteTonKhoModal').on('click', function () {
+                if (deleteTonKhoModal) deleteTonKhoModal.show();
+            });
+
+            const updateModalEl = document.getElementById('updateTonKhoConfirmModal');
+            const updateModal = updateModalEl ? bootstrap.Modal.getOrCreateInstance(updateModalEl) : null;
+
+            $('#btnOpenUpdateConfirm').on('click', function () {
+                $('.currency-input').trigger('blur');
+                $('.qty-input').trigger('blur');
+                syncHiddenInputs();
+                updateKhuyenMaiBadges();
+
+                const newGiaNhap = parseIntNumber($('#GiaNhapInput').val());
+                const newGiaGoc = parseIntNumber($('#GiaGocInput').val());
+                const newGiaBan = parseIntNumber($('#GiaBanInput').val());
+                const newSoLuongTon = parseIntNumber($('#SoLuongTonInput').val());
+
+                const ttVal = $('#TrangThaiKinhDoanh').val();
+                const ttText = ttVal === '1' ? 'Đang kinh doanh' : 'Ngừng kinh doanh';
+                const ttColorClass = ttVal === '1' ? 'text-success' : 'text-danger';
+
+                $('#previewTrangThai')
+                    .text(ttText)
+                    .removeClass('text-success text-danger')
+                    .addClass(ttColorClass);
+
+                $('#newGiaNhap').text(formatCurrencyDong(newGiaNhap));
+                $('#newGiaGoc').text(formatCurrencyDong(newGiaGoc));
+                $('#newGiaBan').text(formatCurrencyDong(newGiaBan));
+                $('#newSoLuongTon').text(formatQty(newSoLuongTon));
+
+                $('#rowGiaNhap').toggleClass('changed-row', newGiaNhap !== initialValues.GiaNhap);
+                $('#rowGiaGoc').toggleClass('changed-row', newGiaGoc !== initialValues.GiaGoc);
+                $('#rowGiaBan').toggleClass('changed-row', newGiaBan !== initialValues.GiaBan);
+                $('#rowSoLuongTon').toggleClass('changed-row', newSoLuongTon !== initialValues.SoLuongTon);
+
+                if (updateModal) updateModal.show();
+            });
+
+            $('#btnConfirmSubmitTonKho').on('click', function () {
+                syncHiddenInputs();
+                if (updateModal) updateModal.hide();
+                $('#editTonKhoForm').submit();
+            });
+        });
+    </script>
+}

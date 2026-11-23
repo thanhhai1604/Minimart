@@ -1,0 +1,28 @@
+﻿@model List<MiniMart.Web.Models.PhanQuyenCheckbox>
+
+@if (Model != null && Model.Any())
+{
+    <ul class="list-unstyled ps-2 mb-0">
+        @foreach (var item in Model)
+        {
+            <li class="my-2">
+                <div class="form-check">
+                    <input class="form-check-input border-success" type="checkbox" name="SelectedQuyenIds" value="@item.MaPQ" id="chk_@item.MaPQ" @(item.DaChon ? "checked" : "") />
+                    <label class="form-check-label fw-semibold text-dark" for="chk_@item.MaPQ">
+                        @item.TenPQ <span class="text-muted small fw-normal ms-1">(@item.MaPQ)</span>
+                        @if (!string.IsNullOrEmpty(item.MoTa))
+                        {
+                            <span class="d-block text-secondary small">@item.MoTa</span>
+                        }
+                    </label>
+                </div>
+                @if (item.Children != null && item.Children.Any())
+                {
+                    <div class="ms-4 border-start ps-3 mt-1">
+                        <partial name="_PermissionTreePartial" model="item.Children" />
+                    </div>
+                }
+            </li>
+        }
+    </ul>
+}

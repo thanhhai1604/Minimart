@@ -1,0 +1,1730 @@
+﻿@{
+    ViewData["Title"] = "Dashboard - MiniMart Back Office";
+}
+
+<style>
+    .dashboard {
+        color: #344054;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+
+    .dashboard-title {
+        color: #198754;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .dashboard-subtitle {
+        color: #8a94a6;
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid #edf0f2;
+        border-radius: 13px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.035);
+        height: 100%;
+    }
+
+    .dashboard-card-header {
+        padding: 17px 18px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .dashboard-card-title {
+        font-size: 15px;
+        font-weight: 750;
+        color: #263238;
+        margin: 0;
+    }
+
+    .dashboard-card-body {
+        padding: 15px 18px 18px;
+    }
+
+    .section-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: #e8f5ee;
+        color: #198754;
+        margin-right: 8px;
+        font-size: 17px;
+    }
+
+    .stat-card {
+        padding: 19px;
+        position: relative;
+        overflow: hidden;
+        min-height: 125px;
+    }
+
+    .stat-label {
+        color: #7b8794;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 23px;
+        font-weight: 800;
+        color: #263238;
+        margin-top: 12px;
+        white-space: nowrap;
+    }
+
+    .stat-icon {
+        position: absolute;
+        right: 17px;
+        top: 18px;
+        width: 43px;
+        height: 43px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+    }
+
+    .stat-note {
+        font-size: 12px;
+        margin-top: 8px;
+        color: #198754;
+    }
+
+    .green-bg {
+        background: #e7f6ed;
+        color: #198754;
+    }
+
+    .blue-bg {
+        background: #eaf2ff;
+        color: #3975d7;
+    }
+
+    .orange-bg {
+        background: #fff3e5;
+        color: #e58b20;
+    }
+
+    .purple-bg {
+        background: #f1ebff;
+        color: #805ad5;
+    }
+
+    .period-filter {
+        display: inline-flex;
+        gap: 3px;
+        background: #f1f4f6;
+        padding: 4px;
+        border-radius: 8px;
+    }
+
+    .period-filter button {
+        border: none;
+        border-radius: 6px;
+        padding: 6px 11px;
+        background: transparent;
+        color: #687586;
+        font-size: 12px;
+        font-weight: 650;
+    }
+
+    .period-filter button.active {
+        background: #198754;
+        color: white;
+        box-shadow: 0 2px 5px rgba(25,135,84,.2);
+    }
+
+    .revenue-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .revenue-box {
+        border: 1px solid #edf0f2;
+        border-radius: 10px;
+        padding: 13px;
+        background: #fcfdfd;
+    }
+
+    .revenue-box span {
+        display: block;
+        color: #7b8794;
+        font-size: 12px;
+        margin-bottom: 7px;
+    }
+
+    .revenue-box strong {
+        font-size: 18px;
+        color: #198754;
+        font-weight: 800;
+    }
+
+    .revenue-box.tax strong {
+        color: #e58b20;
+    }
+
+    .revenue-box.before-tax strong {
+        color: #3975d7;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 285px;
+        width: 100%;
+    }
+
+    .table-dashboard {
+        margin-bottom: 0;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .table-dashboard thead th {
+        background: #f7f9fa;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 700;
+        border-bottom: 1px solid #edf0f2;
+        white-space: nowrap;
+        padding: 12px 10px;
+    }
+
+    .table-dashboard tbody td {
+        padding: 11px 10px;
+        border-color: #f0f2f4;
+    }
+
+    .table-dashboard tbody tr:hover {
+        background: #f8fcf9;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 25px;
+        height: 25px;
+        border-radius: 7px;
+        background: #f0f2f4;
+        color: #657080;
+        font-weight: 750;
+        font-size: 12px;
+    }
+
+    .rank-1 {
+        background: #fff1c9;
+        color: #bd8510;
+    }
+
+    .rank-2 {
+        background: #e8edf3;
+        color: #65758b;
+    }
+
+    .rank-3 {
+        background: #fbe8dc;
+        color: #b76a37;
+    }
+
+    .product-name {
+        font-weight: 700;
+        color: #344054;
+    }
+
+    .product-code {
+        font-size: 11px;
+        color: #98a2b3;
+    }
+
+    .money {
+        color: #198754;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .store-progress {
+        height: 7px;
+        border-radius: 20px;
+        background: #edf1f3;
+        overflow: hidden;
+        margin-top: 7px;
+    }
+
+    .store-progress-bar {
+        height: 100%;
+        background: #198754;
+        border-radius: 20px;
+    }
+
+    .store-item {
+        padding: 14px 0;
+        border-bottom: 1px solid #f0f2f4;
+    }
+
+    .store-item:last-child {
+        border-bottom: none;
+    }
+
+    .store-name {
+        font-weight: 750;
+        font-size: 13px;
+    }
+
+    .store-rank {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e8f5ee;
+        color: #198754;
+        font-weight: 800;
+        margin-right: 10px;
+    }
+
+    .customer-avatar {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #e8f5ee;
+        color: #198754;
+        font-weight: 750;
+        margin-right: 8px;
+    }
+
+    .category-item {
+        margin-bottom: 17px;
+    }
+
+    .category-name {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .category-percent {
+        font-size: 12px;
+        color: #7b8794;
+    }
+
+    .category-bar {
+        height: 9px;
+        background: #edf1f3;
+        border-radius: 20px;
+        margin-top: 7px;
+        overflow: hidden;
+    }
+
+    .category-bar div {
+        height: 100%;
+        background: #198754;
+        border-radius: 20px;
+    }
+
+    .payment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 13px 0;
+        border-bottom: 1px solid #f0f2f4;
+        font-size: 13px;
+    }
+
+    .payment-item:last-child {
+        border-bottom: none;
+    }
+
+    .payment-dot {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .stock-alert {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f2f4;
+    }
+
+    .stock-alert:last-child {
+        border-bottom: none;
+    }
+
+    .stock-warning {
+        background: #fff3e5;
+        color: #d98219;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stock-danger {
+        background: #feecec;
+        color: #d63939;
+        padding: 5px 9px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .dashboard-select {
+        border: 1px solid #e1e6eb;
+        border-radius: 7px;
+        padding: 7px 10px;
+        font-size: 12px;
+        color: #475467;
+        background: white;
+        outline: none;
+    }
+
+    .text-muted-small {
+        color: #98a2b3;
+        font-size: 11px;
+    }
+
+    .dashboard-footer-note {
+        color: #98a2b3;
+        font-size: 11px;
+        margin-top: 12px;
+    }
+
+    @@media (max-width: 768px) {
+        .revenue-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-value {
+            font-size: 19px;
+        }
+
+        .period-filter {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .period-filter button {
+            white-space: nowrap;
+        }
+    }
+</style>
+
+
+<div class="dashboard container-fluid px-3 px-lg-4 py-3">
+
+    <!-- TIÊU ĐỀ -->
+    <div class="dashboard-header">
+
+        <div>
+            <h3 class="dashboard-title">
+                <i class="bi bi-grid-1x2-fill me-2"></i>
+                Tổng Quan Hệ Thống
+            </h3>
+
+            <p class="dashboard-subtitle">
+                Theo dõi tình hình kinh doanh toàn hệ thống MiniMart
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+            <select class="dashboard-select" id="storeFilter">
+                <option value="all">Tất cả siêu thị</option>
+                <option value="dbp">MiniMart Điện Biên Phủ</option>
+                <option value="bth">MiniMart Ba Tháng Hai</option>
+            </select>
+
+            <span class="text-muted-small">
+                <i class="bi bi-calendar3 me-1"></i>
+                Dữ liệu minh họa
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- 1. TỔNG QUAN -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card">
+
+                <div class="stat-label">Tổng Doanh Thu</div>
+
+                <div class="stat-icon green-bg">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+
+                <div class="stat-value" id="overviewRevenue">
+                    1.285.600.000 ₫
+                </div>
+
+                <div class="stat-note">
+                    <i class="bi bi-graph-up-arrow me-1"></i>
+                    +12,8% so với kỳ trước
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card">
+
+                <div class="stat-label">Tổng Đơn Hàng</div>
+
+                <div class="stat-icon blue-bg">
+                    <i class="bi bi-receipt"></i>
+                </div>
+
+                <div class="stat-value" id="overviewOrders">
+                    8.426
+                </div>
+
+                <div class="stat-note text-primary">
+                    <i class="bi bi-graph-up-arrow me-1"></i>
+                    +8,5% so với kỳ trước
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card">
+
+                <div class="stat-label">Tổng Khách Hàng</div>
+
+                <div class="stat-icon orange-bg">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div class="stat-value" id="overviewCustomers">
+                    3.215
+                </div>
+
+                <div class="stat-note" style="color:#e58b20">
+                    <i class="bi bi-person-plus me-1"></i>
+                    186 khách hàng mới
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="dashboard-card stat-card">
+
+                <div class="stat-label">Siêu Thị Hoạt Động</div>
+
+                <div class="stat-icon purple-bg">
+                    <i class="bi bi-shop"></i>
+                </div>
+
+                <div class="stat-value">02</div>
+
+                <div class="stat-note" style="color:#805ad5">
+                    <i class="bi bi-check-circle me-1"></i>
+                    2/2 siêu thị đang hoạt động
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- 2. DOANH THU HỆ THỐNG -->
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+
+            <h5 class="dashboard-card-title">
+                <span class="section-icon">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                </span>
+                Doanh Thu Hệ Thống
+            </h5>
+
+            <div class="period-filter" data-target="revenue">
+                <button class="active" data-period="day">Ngày</button>
+                <button data-period="week">Tuần</button>
+                <button data-period="month">Tháng</button>
+                <button data-period="year">Năm</button>
+            </div>
+
+        </div>
+
+        <div class="dashboard-card-body">
+
+            <div class="revenue-summary">
+
+                <div class="revenue-box">
+                    <span>Doanh Thu</span>
+                    <strong id="revenueTotal">1.285.600.000 ₫</strong>
+                </div>
+
+                <div class="revenue-box before-tax">
+                    <span>Doanh Thu Trước Thuế</span>
+                    <strong id="revenueBeforeTax">1.190.370.370 ₫</strong>
+                </div>
+
+                <div class="revenue-box tax">
+                    <span>Tiền Thuế</span>
+                    <strong id="revenueTax">95.229.630 ₫</strong>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 3. SIÊU THỊ VÀ KHÁCH HÀNG -->
+    <div class="row g-3 mb-4">
+
+        <!-- SIÊU THỊ DOANH THU CAO -->
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-shop-window"></i>
+                        </span>
+                        Siêu Thị Có Doanh Thu Cao Nhất
+                    </h5>
+
+                    <div class="period-filter" data-target="store">
+                        <button class="active" data-period="day">Ngày</button>
+                        <button data-period="week">Tuần</button>
+                        <button data-period="month">Tháng</button>
+                        <button data-period="year">Năm</button>
+                    </div>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-dashboard">
+
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Siêu Thị</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="storeRankingBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="mt-3">
+
+                        <div class="revenue-box mb-2">
+                            <span>Doanh Thu Trước Thuế</span>
+                            <strong id="storeBeforeTax">650.000.000 ₫</strong>
+                        </div>
+
+                        <div class="revenue-box tax">
+                            <span>Tiền Thuế</span>
+                            <strong id="storeTax">48.148.148 ₫</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- KHÁCH HÀNG MUA NHIỀU -->
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-person-hearts"></i>
+                        </span>
+                        Khách Hàng Mua Hàng Nhiều Nhất
+                    </h5>
+
+                    <div class="period-filter" data-target="customer">
+                        <button class="active" data-period="day">Ngày</button>
+                        <button data-period="week">Tuần</button>
+                        <button data-period="month">Tháng</button>
+                        <button data-period="year">Năm</button>
+                    </div>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-dashboard">
+
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Số Đơn</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="customerRankingBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="mt-3">
+
+                        <div class="revenue-box mb-2">
+                            <span>Doanh Thu Trước Thuế</span>
+                            <strong id="customerBeforeTax">42.500.000 ₫</strong>
+                        </div>
+
+                        <div class="revenue-box tax">
+                            <span>Tiền Thuế</span>
+                            <strong id="customerTax">3.148.148 ₫</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 4. TOP SẢN PHẨM -->
+    <div class="row g-3 mb-4">
+
+        <!-- TOP 10 SẢN PHẨM BÁN CHẠY -->
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-fire"></i>
+                        </span>
+                        Top 10 Sản Phẩm Bán Chạy
+                    </h5>
+
+                    <select class="dashboard-select product-filter">
+                        <option value="all">Tất cả siêu thị</option>
+                        <option value="dbp">Điện Biên Phủ</option>
+                        <option value="bth">Ba Tháng Hai</option>
+                    </select>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-dashboard">
+
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Sản Phẩm</th>
+                                    <th>Số Lượng</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="bestSellingBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOP 10 SẢN PHẨM DOANH THU CAO -->
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-trophy-fill"></i>
+                        </span>
+                        Top 10 Sản Phẩm Doanh Thu Cao
+                    </h5>
+
+                    <select class="dashboard-select product-filter">
+                        <option value="all">Tất cả siêu thị</option>
+                        <option value="dbp">Điện Biên Phủ</option>
+                        <option value="bth">Ba Tháng Hai</option>
+                    </select>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-dashboard">
+
+                            <thead>
+                                <tr>
+                                    <th>Hạng</th>
+                                    <th>Sản Phẩm</th>
+                                    <th>Số Lượng</th>
+                                    <th>Doanh Thu</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="topRevenueProductBody"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 5. DANH MỤC SẢN PHẨM -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-tags-fill"></i>
+                        </span>
+                        Top Danh Mục Có Doanh Thu Cao
+                    </h5>
+
+                    <select class="dashboard-select">
+                        <option>Tất cả siêu thị</option>
+                        <option>Điện Biên Phủ</option>
+                        <option>Ba Tháng Hai</option>
+                    </select>
+
+                </div>
+
+                <div class="dashboard-card-body"
+                     id="categoryRankingBody">
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PHƯƠNG THỨC THANH TOÁN -->
+        <div class="col-12 col-xl-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <h5 class="dashboard-card-title">
+                        <span class="section-icon">
+                            <i class="bi bi-wallet2"></i>
+                        </span>
+                        Doanh Thu Theo Phương Thức Thanh Toán
+                    </h5>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="chart-container"
+                         style="height:220px">
+
+                        <canvas id="paymentChart"></canvas>
+
+                    </div>
+
+                    <div id="paymentLegend"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 6. CẢNH BÁO TỒN KHO -->
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+
+            <h5 class="dashboard-card-title">
+                <span class="section-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </span>
+                Cảnh Báo Hàng Tồn Kho
+            </h5>
+
+            <span class="badge bg-danger">
+                4 sản phẩm cần chú ý
+            </span>
+
+        </div>
+
+        <div class="dashboard-card-body">
+
+            <div class="row g-3" id="stockAlertBody"></div>
+
+        </div>
+
+    </div>
+
+    <div class="dashboard-footer-note text-end">
+        * Dữ liệu trên Dashboard hiện là dữ liệu minh họa phục vụ thiết kế giao diện.
+    </div>
+
+</div>
+
+
+<!-- CHART.JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+    // ==========================================
+    // 1. CẤU HÌNH
+    // ==========================================
+
+    const currencyFormatter = new Intl.NumberFormat('vi-VN', {
+        maximumFractionDigits: 0
+    });
+
+    function formatMoney(value) {
+        return currencyFormatter.format(value) + ' ₫';
+    }
+
+    function formatNumber(value) {
+        return currencyFormatter.format(value);
+    }
+
+    function getRankClass(index) {
+        if (index === 0) return 'rank-1';
+        if (index === 1) return 'rank-2';
+        if (index === 2) return 'rank-3';
+        return '';
+    }
+
+
+    // ==========================================
+    // 2. MOCK DATA DOANH THU
+    // ==========================================
+
+    const revenueData = {
+
+        day: {
+            total: 42860000,
+            beforeTax: 39703704,
+            tax: 3158593,
+            labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+            values: [3200000, 5800000, 7200000, 4900000, 6800000, 8500000, 6460000]
+        },
+
+        week: {
+            total: 285600000,
+            beforeTax: 264444444,
+            tax: 21155556,
+            labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'],
+            values: [32000000, 36500000, 38900000, 41000000, 45000000, 48000000, 44100000]
+        },
+
+        month: {
+            total: 1285600000,
+            beforeTax: 1190370370,
+            tax: 95229630,
+            labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
+            values: [280000000, 315000000, 298600000, 392000000]
+        },
+
+        year: {
+            total: 14560000000,
+            beforeTax: 13481481481,
+            tax: 1078518519,
+            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+            values: [950000000, 1020000000, 1100000000, 1150000000, 1180000000, 1250000000, 1300000000, 1200000000, 1180000000, 1250000000, 1320000000, 1700000000]
+        }
+
+    };
+
+
+    // ==========================================
+    // 3. MOCK DATA SIÊU THỊ
+    // ==========================================
+
+    const storeData = {
+
+        day: [
+            {
+                name: 'MiniMart Điện Biên Phủ',
+                revenue: 26500000,
+                beforeTax: 24537037,
+                tax: 1962963
+            },
+            {
+                name: 'MiniMart Ba Tháng Hai',
+                revenue: 16360000,
+                beforeTax: 15148148,
+                tax: 1214812
+            }
+        ],
+
+        week: [
+            {
+                name: 'MiniMart Điện Biên Phủ',
+                revenue: 168500000,
+                beforeTax: 156018519,
+                tax: 12481481
+            },
+            {
+                name: 'MiniMart Ba Tháng Hai',
+                revenue: 117100000,
+                beforeTax: 108425926,
+                tax: 8674074
+            }
+        ],
+
+        month: [
+            {
+                name: 'MiniMart Điện Biên Phủ',
+                revenue: 735600000,
+                beforeTax: 681111111,
+                tax: 54488889
+            },
+            {
+                name: 'MiniMart Ba Tháng Hai',
+                revenue: 550000000,
+                beforeTax: 509259259,
+                tax: 40740741
+            }
+        ],
+
+        year: [
+            {
+                name: 'MiniMart Điện Biên Phủ',
+                revenue: 8200000000,
+                beforeTax: 7592592593,
+                tax: 607407407
+            },
+            {
+                name: 'MiniMart Ba Tháng Hai',
+                revenue: 6360000000,
+                beforeTax: 5896296296,
+                tax: 470370370
+            }
+        ]
+
+    };
+
+
+    // ==========================================
+    // 4. MOCK DATA KHÁCH HÀNG
+    // ==========================================
+
+    const customerData = {
+
+        day: [
+            { name: 'Nguyễn Minh Anh', phone: '0901 234 567', orders: 5, revenue: 2850000 },
+            { name: 'Trần Hoàng Nam', phone: '0902 345 678', orders: 4, revenue: 2150000 },
+            { name: 'Lê Thị Thanh', phone: '0903 456 789', orders: 3, revenue: 1850000 },
+            { name: 'Phạm Quốc Bảo', phone: '0904 567 890', orders: 3, revenue: 1420000 },
+            { name: 'Võ Ngọc Hà', phone: '0905 678 901', orders: 2, revenue: 980000 }
+        ],
+
+        week: [
+            { name: 'Nguyễn Minh Anh', phone: '0901 234 567', orders: 18, revenue: 12500000 },
+            { name: 'Trần Hoàng Nam', phone: '0902 345 678', orders: 15, revenue: 10800000 },
+            { name: 'Lê Thị Thanh', phone: '0903 456 789', orders: 12, revenue: 8500000 },
+            { name: 'Phạm Quốc Bảo', phone: '0904 567 890', orders: 10, revenue: 7200000 },
+            { name: 'Võ Ngọc Hà', phone: '0905 678 901', orders: 8, revenue: 5800000 }
+        ],
+
+        month: [
+            { name: 'Nguyễn Minh Anh', phone: '0901 234 567', orders: 68, revenue: 42500000 },
+            { name: 'Trần Hoàng Nam', phone: '0902 345 678', orders: 56, revenue: 36800000 },
+            { name: 'Lê Thị Thanh', phone: '0903 456 789', orders: 49, revenue: 31500000 },
+            { name: 'Phạm Quốc Bảo', phone: '0904 567 890', orders: 42, revenue: 27800000 },
+            { name: 'Võ Ngọc Hà', phone: '0905 678 901', orders: 35, revenue: 21500000 }
+        ],
+
+        year: [
+            { name: 'Nguyễn Minh Anh', phone: '0901 234 567', orders: 620, revenue: 385000000 },
+            { name: 'Trần Hoàng Nam', phone: '0902 345 678', orders: 580, revenue: 352000000 },
+            { name: 'Lê Thị Thanh', phone: '0903 456 789', orders: 510, revenue: 315000000 },
+            { name: 'Phạm Quốc Bảo', phone: '0904 567 890', orders: 465, revenue: 278000000 },
+            { name: 'Võ Ngọc Hà', phone: '0905 678 901', orders: 420, revenue: 235000000 }
+        ]
+
+    };
+
+
+    // ==========================================
+    // 5. MOCK DATA SẢN PHẨM
+    // ==========================================
+
+    const products = [
+        { code: 'SP001', name: 'Sữa tươi Vinamilk 1L', quantity: 1250, revenue: 31250000 },
+        { code: 'SP002', name: 'Nước suối Aquafina 500ml', quantity: 1100, revenue: 11000000 },
+        { code: 'SP003', name: 'Mì Hảo Hảo tôm chua cay', quantity: 980, revenue: 7840000 },
+        { code: 'SP004', name: 'Dầu ăn Neptune 1L', quantity: 850, revenue: 25500000 },
+        { code: 'SP005', name: 'Bánh Oreo socola', quantity: 780, revenue: 11700000 },
+        { code: 'SP006', name: 'Nước ngọt Coca-Cola 330ml', quantity: 750, revenue: 11250000 },
+        { code: 'SP007', name: 'Đường Biên Hòa 1kg', quantity: 690, revenue: 15180000 },
+        { code: 'SP008', name: 'Gạo ST25 5kg', quantity: 580, revenue: 17400000 },
+        { code: 'SP009', name: 'Nước giặt OMO 2.7kg', quantity: 520, revenue: 33800000 },
+        { code: 'SP010', name: 'Sữa đặc Ông Thọ 380g', quantity: 490, revenue: 12250000 }
+    ];
+
+
+    // ==========================================
+    // 6. MOCK DATA DANH MỤC
+    // ==========================================
+
+    const categories = [
+        { name: 'Thực phẩm', revenue: 385000000, percent: 30 },
+        { name: 'Đồ uống', revenue: 295000000, percent: 23 },
+        { name: 'Sữa và sản phẩm từ sữa', revenue: 218000000, percent: 17 },
+        { name: 'Hóa mỹ phẩm', revenue: 180000000, percent: 14 },
+        { name: 'Đồ gia dụng', revenue: 128000000, percent: 10 },
+        { name: 'Khác', revenue: 79600000, percent: 6 }
+    ];
+
+
+    // ==========================================
+    // 7. MOCK DATA PHƯƠNG THỨC THANH TOÁN
+    // ==========================================
+
+    const payments = [
+        { name: 'Tiền mặt', amount: 771360000, color: '#198754' },
+        { name: 'Chuyển khoản', amount: 385680000, color: '#3975d7' },
+        { name: 'Ví điện tử', amount: 128560000, color: '#e58b20' }
+    ];
+
+
+    // ==========================================
+    // 8. MOCK DATA TỒN KHO
+    // ==========================================
+
+    const stockAlerts = [
+        {
+            name: 'Sữa tươi Vinamilk 1L',
+            store: 'MiniMart Điện Biên Phủ',
+            quantity: 5,
+            status: 'Sắp hết hàng',
+            danger: true
+        },
+        {
+            name: 'Nước suối Aquafina 500ml',
+            store: 'MiniMart Ba Tháng Hai',
+            quantity: 8,
+            status: 'Sắp hết hàng',
+            danger: true
+        },
+        {
+            name: 'Mì Hảo Hảo tôm chua cay',
+            store: 'MiniMart Điện Biên Phủ',
+            quantity: 15,
+            status: 'Tồn kho thấp',
+            danger: false
+        },
+        {
+            name: 'Dầu ăn Neptune 1L',
+            store: 'MiniMart Ba Tháng Hai',
+            quantity: 12,
+            status: 'Tồn kho thấp',
+            danger: false
+        }
+    ];
+
+
+    // ==========================================
+    // 9. BIỂU ĐỒ DOANH THU
+    // ==========================================
+
+    const revenueContext =
+        document.getElementById('revenueChart');
+
+    const revenueChart = new Chart(revenueContext, {
+        type: 'line',
+
+        data: {
+            labels: revenueData.month.labels,
+
+            datasets: [{
+                label: 'Doanh thu',
+                data: revenueData.month.values,
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25,135,84,.10)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointBackgroundColor: '#198754'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return formatMoney(context.raw);
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+
+                    ticks: {
+                        callback: function(value) {
+                            return currencyFormatter.format(value);
+                        }
+                    },
+
+                    grid: {
+                        color: '#f0f2f4'
+                    }
+                },
+
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+
+    // ==========================================
+    // 10. CẬP NHẬT DOANH THU THEO THỜI GIAN
+    // ==========================================
+
+    function updateRevenue(period) {
+
+        const data = revenueData[period];
+
+        document.getElementById('revenueTotal').textContent =
+            formatMoney(data.total);
+
+        document.getElementById('revenueBeforeTax').textContent =
+            formatMoney(data.beforeTax);
+
+        document.getElementById('revenueTax').textContent =
+            formatMoney(data.tax);
+
+        revenueChart.data.labels = data.labels;
+
+        revenueChart.data.datasets[0].data = data.values;
+
+        revenueChart.update();
+
+    }
+
+
+    // ==========================================
+    // 11. BẢNG XẾP HẠNG SIÊU THỊ
+    // ==========================================
+
+    function renderStoreRanking(period) {
+
+        const data = storeData[period];
+
+        const tbody = document.getElementById('storeRankingBody');
+
+        tbody.innerHTML = '';
+
+        data.forEach((item, index) => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <span class="rank-badge ${getRankClass(index)}">
+                            ${index + 1}
+                        </span>
+                    </td>
+
+                    <td class="fw-semibold">
+                        ${item.name}
+                    </td>
+
+                    <td class="money">
+                        ${formatMoney(item.revenue)}
+                    </td>
+                </tr>
+            `;
+
+        });
+
+        const topStore = data[0];
+
+        document.getElementById('storeBeforeTax').textContent =
+            formatMoney(topStore.beforeTax);
+
+        document.getElementById('storeTax').textContent =
+            formatMoney(topStore.tax);
+
+    }
+
+
+    // ==========================================
+    // 12. BẢNG XẾP HẠNG KHÁCH HÀNG
+    // ==========================================
+
+    function renderCustomerRanking(period) {
+
+        const data = customerData[period];
+
+        const tbody = document.getElementById('customerRankingBody');
+
+        tbody.innerHTML = '';
+
+        data.forEach((item, index) => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <span class="rank-badge ${getRankClass(index)}">
+                            ${index + 1}
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="fw-semibold">
+                            ${item.name}
+                        </div>
+                        <div class="product-code">
+                            ${item.phone}
+                        </div>
+                    </td>
+
+                    <td>${item.orders}</td>
+
+                    <td class="money">
+                        ${formatMoney(item.revenue)}
+                    </td>
+                </tr>
+            `;
+
+        });
+
+        const topCustomer = data[0];
+
+        // Tạm tính doanh thu trước thuế và thuế với thuế suất minh họa 8%.
+        const beforeTax = topCustomer.revenue / 1.08;
+        const tax = topCustomer.revenue - beforeTax;
+
+        document.getElementById('customerBeforeTax').textContent =
+            formatMoney(beforeTax);
+
+        document.getElementById('customerTax').textContent =
+            formatMoney(tax);
+
+    }
+
+
+    // ==========================================
+    // 13. TOP SẢN PHẨM BÁN CHẠY
+    // ==========================================
+
+    function renderBestSelling() {
+
+        const tbody = document.getElementById('bestSellingBody');
+
+        tbody.innerHTML = '';
+
+        const sorted = [...products]
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 10);
+
+        sorted.forEach((item, index) => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <span class="rank-badge ${getRankClass(index)}">
+                            ${index + 1}
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="product-name">${item.name}</div>
+                        <div class="product-code">${item.code}</div>
+                    </td>
+
+                    <td class="fw-semibold">
+                        ${formatNumber(item.quantity)}
+                    </td>
+
+                    <td class="money">
+                        ${formatMoney(item.revenue)}
+                    </td>
+                </tr>
+            `;
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 14. TOP SẢN PHẨM DOANH THU CAO
+    // ==========================================
+
+    function renderTopRevenueProducts() {
+
+        const tbody = document.getElementById('topRevenueProductBody');
+
+        tbody.innerHTML = '';
+
+        const sorted = [...products]
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 10);
+
+        sorted.forEach((item, index) => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <span class="rank-badge ${getRankClass(index)}">
+                            ${index + 1}
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="product-name">${item.name}</div>
+                        <div class="product-code">${item.code}</div>
+                    </td>
+
+                    <td class="fw-semibold">
+                        ${formatNumber(item.quantity)}
+                    </td>
+
+                    <td class="money">
+                        ${formatMoney(item.revenue)}
+                    </td>
+                </tr>
+            `;
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 15. TOP DANH MỤC
+    // ==========================================
+
+    function renderCategories() {
+
+        const container =
+            document.getElementById('categoryRankingBody');
+
+        container.innerHTML = '';
+
+        categories.forEach(item => {
+
+            container.innerHTML += `
+                <div class="category-item">
+
+                    <div class="d-flex justify-content-between">
+
+                        <span class="category-name">
+                            ${item.name}
+                        </span>
+
+                        <span class="category-percent">
+                            ${item.percent}%
+                        </span>
+
+                    </div>
+
+                    <div class="category-bar">
+                        <div style="width:${item.percent}%"></div>
+                    </div>
+
+                    <div class="text-end money mt-1"
+                         style="font-size:12px">
+                        ${formatMoney(item.revenue)}
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 16. BIỂU ĐỒ THANH TOÁN
+    // ==========================================
+
+    const paymentChart = new Chart(
+        document.getElementById('paymentChart'),
+        {
+            type: 'doughnut',
+
+            data: {
+                labels: payments.map(x => x.name),
+
+                datasets: [{
+                    data: payments.map(x => x.amount),
+                    backgroundColor: payments.map(x => x.color),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                cutout: '68%',
+
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' +
+                                    formatMoney(context.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+
+    function renderPaymentLegend() {
+
+        const container = document.getElementById('paymentLegend');
+
+        container.innerHTML = '';
+
+        payments.forEach(item => {
+
+            container.innerHTML += `
+                <div class="payment-item">
+
+                    <span>
+                        <span class="payment-dot"
+                              style="background:${item.color}">
+                        </span>
+
+                        ${item.name}
+                    </span>
+
+                    <strong>
+                        ${formatMoney(item.amount)}
+                    </strong>
+
+                </div>
+            `;
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 17. CẢNH BÁO TỒN KHO
+    // ==========================================
+
+    function renderStockAlerts() {
+
+        const container = document.getElementById('stockAlertBody');
+
+        container.innerHTML = '';
+
+        stockAlerts.forEach(item => {
+
+            container.innerHTML += `
+                <div class="col-12 col-md-6">
+
+                    <div class="stock-alert">
+
+                        <div>
+                            <div class="product-name">
+                                ${item.name}
+                            </div>
+
+                            <div class="product-code">
+                                ${item.store}
+                            </div>
+
+                            <div class="text-muted-small mt-1">
+                                Số lượng còn: ${item.quantity}
+                            </div>
+                        </div>
+
+                        <span class="${item.danger ? 'stock-danger' : 'stock-warning'}">
+                            ${item.status}
+                        </span>
+
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+    }
+
+
+    // ==========================================
+    // 18. SỰ KIỆN TOGGLE THỜI GIAN
+    // ==========================================
+
+    document.querySelectorAll('.period-filter').forEach(group => {
+
+        group.querySelectorAll('button').forEach(button => {
+
+            button.addEventListener('click', function() {
+
+                group.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                this.classList.add('active');
+
+                const period = this.dataset.period;
+
+                const target = group.dataset.target;
+
+                if (target === 'revenue') {
+                    updateRevenue(period);
+                }
+
+                if (target === 'store') {
+                    renderStoreRanking(period);
+                }
+
+                if (target === 'customer') {
+                    renderCustomerRanking(period);
+                }
+
+            });
+
+        });
+
+    });
+
+
+    // ==========================================
+    // 19. KHỞI TẠO DASHBOARD
+    // ==========================================
+
+    updateRevenue('month');
+
+    renderStoreRanking('day');
+
+    renderCustomerRanking('day');
+
+    renderBestSelling();
+
+    renderTopRevenueProducts();
+
+    renderCategories();
+
+    renderPaymentLegend();
+
+    renderStockAlerts();
+
+</script>

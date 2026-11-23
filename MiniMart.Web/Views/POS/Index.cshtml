@@ -1,0 +1,191 @@
+@model IEnumerable<MiniMart.Web.Models.POS>
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Danh sách POS";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<style>
+    #posTable tbody tr { cursor: pointer; }
+    #posTable thead .filter-row th { cursor: default; }
+    #posTable thead .filter-row th::before,
+    #posTable thead .filter-row th::after { display: none !important; }
+</style>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                <i class="bi bi-hdd-stack-fill me-2"></i> Danh Sách Thiết Bị POS
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Quản lý thông tin các thiết bị máy bán hàng trong hệ thống
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="btnXoaBoLoc" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Xóa bộ lọc
+            </button>
+            
+            @if (Html.HasPermission("WEB_QL_POS_THEM"))
+            {
+                <a asp-action="Create" class="btn btn-success fw-bold shadow-sm">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm POS
+                </a>
+            }
+        </div>
+    </div>
+    <hr />
+
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-5">
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table id="posTable" class="table table-hover table-bordered align-middle w-100">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="text-center" style="width: 5%;">STT</th>
+                            <th>Mã POS</th>
+                            <th>Tên POS</th>
+                            <th>Siêu Thị Trực Thuộc</th>
+                            <th class="text-center">Trạng Thái Sử Dụng</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th class="text-center"></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Nhập mã POS..." /></th>
+                            <th><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Nhập tên POS..." /></th>
+                            <th>
+                                <select class="form-select form-select-sm select2-filter" data-col="3" style="width: 100%;">
+                                    <option value="">Tất cả siêu thị</option>
+                                    @if (Model != null)
+                                    {
+                                        @foreach (var tenSieuThi in Model.Select(x => x.SieuThiNavigation?.TenST).Distinct().Where(x => x != null))
+                                        {
+                                            <option value="@tenSieuThi">@tenSieuThi</option>
+                                        }
+                                    }
+                                </select>
+                            </th>
+                            <th class="text-center">
+                                <select class="form-select form-select-sm select2-filter" data-col="4" style="width: 100%;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="Đã sử dụng">Đã sử dụng</option>
+                                    <option value="Chưa sử dụng">Chưa sử dụng</option>
+                                </select>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            int chiSo = 1;
+                            foreach (var item in Model)
+                            {
+                                // Lưu trữ cả MaPOS và MaST vào data-id và data-mast để phân biệt khóa kép
+                                <tr data-id="@item.MaPOS" data-mast="@item.MaST">
+                                    <td class="text-center fw-semibold text-muted">@chiSo</td>
+                                    <td class="fw-bold text-success">@item.MaPOS</td>
+                                    <td class="fw-semibold text-dark">@item.TenPOS</td>
+                                    <td>
+                                        <span class="text-primary fw-semibold">
+                                            @(item.SieuThiNavigation != null ? item.SieuThiNavigation.TenST : item.MaST)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.TrangThai == 1)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold">
+                                                Đã sử dụng
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge px-2 py-1 fw-semibold" style="background-color: #f8d7da !important; color: #842029 !important; border: 1px solid #f5c2c7 !important;">
+                                                Chưa sử dụng
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                chiSo++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#posTable').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" },
+                "orderCellsTop": true,
+                "columnDefs": [{ "orderable": false, "targets": 0 }],
+                "order": [[1, 'asc']]
+            });
+
+            table.on('draw.dt', function () {
+                var start = table.page.info().start;
+                table.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                    .nodes().each(function (cell, i) { cell.innerHTML = start + i + 1; });
+            }).draw();
+
+            $('.select2-filter').select2({ theme: 'bootstrap-5', width: '100%', minimumResultsForSearch: 0 });
+
+            $('.filter-row').on('click', 'input, select, .select2, .select2-selection', function (e) {
+                e.stopPropagation();
+            });
+
+            $('.column-search').on('keyup change clear', function () {
+                table.column($(this).data('col')).search(this.value).draw();
+            });
+
+            $('.select2-filter').on('change', function () {
+                var colIndex = $(this).data('col');
+                var giaTri = $(this).val();
+                if (!giaTri) {
+                    table.column(colIndex).search('').draw();
+                } else {
+                    var regex = '^\\s*' + $.fn.dataTable.util.escapeRegex(giaTri) + '\\s*$';
+                    table.column(colIndex).search(regex, true, false).draw();
+                }
+            });
+
+            $('#btnXoaBoLoc').on('click', function () {
+                $('.column-search').val('');
+                $('.select2-filter').val('').trigger('change.select2');
+                table.search('').columns().search('').draw();
+            });
+
+            // Chuyển hướng sang trang Edit truyền đầy đủ cặp khóa chính MaPOS và MaST
+            $('#posTable tbody').on('click', 'tr', function () {
+                @if (Html.HasPermission("WEB_QL_POS_XEM"))
+                {
+                    <text>
+                    var maPOS = $(this).data('id');
+                    var maST = $(this).data('mast');
+                    if (maPOS && maST) { 
+                        window.location.href = '/POS/Edit/' + maPOS + '?maST=' + maST; 
+                    }
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    var permissionModal = new bootstrap.Modal(document.getElementById('permissionErrorModal'));
+                    permissionModal.show();
+                    </text>
+                }
+            });
+        });
+    </script>
+}

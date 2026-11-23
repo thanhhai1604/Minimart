@@ -1,0 +1,826 @@
+﻿@model MiniMart.Web.Models.PhieuNhap
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Tạo phiếu nhập hàng";
+    bool gioiHanSieuThi = ViewBag.GioiHanSieuThi as bool? == true;
+    string chiTietJson = ViewBag.ChiTietJson as string ?? "[]";
+    string danhSachSanPhamJson = ViewBag.DanhSachSanPhamJson as string ?? "[]";
+    string tenNhanVienLap = ViewBag.TenNhanVienLap as string ?? (Model.MaNV ?? "");
+    var dsSieuThi = ViewBag.DanhSachSieuThi as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var dsNhaCungCap = ViewBag.DanhSachNhaCungCap as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    string trangThaiClass = Model.TrangThai == 1 ? "text-success" : "text-danger";
+
+    var danhSachLoi = ViewData.ModelState.Values
+        .SelectMany(v => v.Errors)
+        .Select(e => e.ErrorMessage)
+        .Where(msg => !string.IsNullOrWhiteSpace(msg))
+        .Distinct()
+        .ToList();
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<style>
+    .inline-qty-input {
+        width: 90px;
+        margin-left: auto;
+    }
+
+    .inline-price-input {
+        width: 135px;
+        margin-left: auto;
+    }
+
+    .validation-summary-valid {
+        display: none !important;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-2">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Tạo Phiếu Nhập Hàng
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Nhập thông tin phiếu nhập và thêm danh sách sản phẩm nhập kho
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" id="btnResetForm" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                <i class="bi bi-eraser me-1"></i> Xóa nhập liệu
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <form asp-action="Create" method="post" id="createPhieuNhapForm">
+        @Html.AntiForgeryToken()
+
+        @if (danhSachLoi.Count > 0)
+        {
+            <div class="alert alert-danger small mb-3 shadow-sm" role="alert">
+                <ul class="mb-0">
+                    @foreach (var loi in danhSachLoi)
+                    {
+                        <li>@loi</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <input type="hidden" asp-for="MaPN" id="MaPN" />
+        <input type="hidden" asp-for="MaNV" id="MaNV" />
+        <input type="hidden" name="chiTietJson" id="chiTietJson" value="@chiTietJson" />
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-10">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-success mb-3">
+                            <i class="bi bi-info-circle me-2"></i> Thông tin phiếu nhập hàng
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="SoPhieuInput" class="form-label fw-semibold small text-secondary">
+                                    Mã Phiếu Nhập Hàng <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success">
+                                        <i class="bi bi-code-square"></i>
+                                    </span>
+                                    <input type="text"
+                                           inputmode="numeric"
+                                           maxlength="5"
+                                           class="form-control bg-light border-start-0 ps-0 fw-bold text-success"
+                                           placeholder="Nhập số phiếu nhập hàng..."
+                                           autocomplete="off"
+                                           id="SoPhieuInput" />
+                                </div>
+                                <span asp-validation-for="MaPN" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="NgayNhap" class="form-label fw-semibold small text-secondary">
+                                    Ngày Nhập Hàng <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-primary">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </span>
+                                    <input type="datetime-local" asp-for="NgayNhap"
+                                           value="@Model.NgayNhap.ToString("yyyy-MM-ddTHH:mm")"
+                                           class="form-control bg-light border-start-0 ps-0" id="NgayNhap" />
+                                </div>
+                                <span asp-validation-for="NgayNhap" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="TenNhanVienDisplay" class="form-label fw-semibold small text-secondary">
+                                    Nhân Viên Lập Phiếu
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary">
+                                        <i class="bi bi-person-badge"></i>
+                                    </span>
+                                    <input type="text" value="@tenNhanVienLap"
+                                           class="form-control bg-light border-start-0 ps-0" readonly id="TenNhanVienDisplay" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-0">
+                                <label asp-for="MaST" class="form-label fw-semibold small text-secondary">
+                                    Siêu Thị Nhập Hàng <span class="text-danger">*</span>
+                                </label>
+                                @if (gioiHanSieuThi)
+                                {
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 text-success">
+                                            <i class="bi bi-shop-window"></i>
+                                        </span>
+                                        <select id="MaST" class="form-select bg-light border-start-0" disabled>
+                                            @foreach (var st in dsSieuThi)
+                                            {
+                                                if (st.Value == Model.MaST || st.Selected)
+                                                {
+                                                    <option value="@st.Value" selected="selected">@st.Text</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@st.Value">@st.Text</option>
+                                                }
+                                            }
+                                        </select>
+                                        <input type="hidden" asp-for="MaST" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <select id="MaST" asp-for="MaST" class="form-select bg-light select2-lookup">
+                                        <option value="">-- Chọn siêu thị nhập hàng --</option>
+                                        @foreach (var st in dsSieuThi)
+                                        {
+                                            if (!string.IsNullOrEmpty(Model.MaST) && (st.Value == Model.MaST || st.Selected))
+                                            {
+                                                <option value="@st.Value" selected="selected">@st.Text</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@st.Value">@st.Text</option>
+                                            }
+                                        }
+                                    </select>
+                                }
+                                <span asp-validation-for="MaST" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-0">
+                                <label asp-for="MaNCC" class="form-label fw-semibold small text-secondary">
+                                    Nhà Cung Cấp <span class="text-danger">*</span>
+                                </label>
+                                <select id="MaNCC" asp-for="MaNCC" class="form-select bg-light select2-lookup">
+                                    <option value="">-- Chọn nhà cung cấp --</option>
+                                    @foreach (var ncc in dsNhaCungCap)
+                                    {
+                                        if (ncc.Value == Model.MaNCC || ncc.Selected)
+                                        {
+                                            <option value="@ncc.Value" selected="selected">@ncc.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@ncc.Value">@ncc.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="MaNCC" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-0">
+                                <label asp-for="TrangThai" class="form-label fw-semibold small text-secondary">
+                                    Trạng Thái
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 @trangThaiClass" id="trangThaiIconBox">
+                                        <i class="bi bi-toggle-on" id="trangThaiIcon"></i>
+                                    </span>
+                                    <select id="TrangThai" asp-for="TrangThai" class="form-select bg-light border-start-0 fw-semibold @trangThaiClass">
+                                        @if (Model.TrangThai == 1)
+                                        {
+                                            <option value="0" class="text-danger">Chưa giao hàng</option>
+                                            <option value="1" class="text-success" selected="selected">Đã giao hàng</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="0" class="text-danger" selected="selected">Chưa giao hàng</option>
+                                            <option value="1" class="text-success">Đã giao hàng</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-success mb-4">
+                    <i class="bi bi-cart-plus me-2"></i> Thêm Sản Phẩm Nhập Hàng
+                </h5>
+
+                <div class="row g-3 align-items-end bg-light p-3 rounded-3 border mb-0">
+                    <div class="col-md-4">
+                        <label for="addMaSP" class="form-label fw-semibold small text-secondary">Chọn sản phẩm</label>
+                        <select id="addMaSP" class="form-select bg-white select2-sp" style="width: 100%;">
+                            <option value="">Chọn sản phẩm nhập hàng</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="addTenSP" class="form-label fw-semibold small text-secondary">Tên Sản Phẩm</label>
+                        <input type="text" id="addTenSP" class="form-control bg-white fw-semibold" readonly placeholder="Tên sản phẩm..." />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="addSoLuong" class="form-label fw-semibold small text-secondary">Số Lượng</label>
+                        <input type="number" min="1" step="1" id="addSoLuong" class="form-control bg-white text-end fw-semibold" placeholder="0" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="addGiaNhap" class="form-label fw-semibold small text-secondary">Giá Nhập</label>
+                        <input type="text" inputmode="numeric" id="addGiaNhap" class="form-control bg-white text-end fw-semibold currency-input" value="0 ₫" autocomplete="off" />
+                    </div>
+
+                    <div class="col-md-1 d-grid">
+                        <button type="button" id="btnAddChiTiet" class="btn btn-success fw-bold">
+                            <i class="bi bi-plus-lg"></i> Thêm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-success mb-3">
+                    <i class="bi bi-cart-plus me-2"></i> Danh Sách Sản Phẩm Nhập Hàng
+                </h5>
+
+                <div class="table-responsive">
+                    <table id="chiTietTable" class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="text-center" style="width: 5%;">STT</th>
+                                <th style="width: 14%;">Mã Sản Phẩm</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th class="text-end" style="width: 12%;">Số Lượng</th>
+                                <th class="text-end" style="width: 16%;">Giá Nhập</th>
+                                <th class="text-end" style="width: 16%;">Thành Tiền</th>
+                                <th class="text-center" style="width: 7%;">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chiTietBody"></tbody>
+                        <tfoot>
+                            <tr class="table-light fw-bold">
+                                <td colspan="5" class="text-end text-dark">Tổng cộng:</td>
+                                <td class="text-end text-success fs-6" id="tongTienDisplay">0 ₫</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end align-items-center border-top pt-3 mt-4">
+                    <button type="button" id="btnSavePhieuNhap" class="btn btn-success px-4 fw-bold shadow-sm">
+                        <i class="bi bi-save me-1"></i> Lưu phiếu nhập hàng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="changeSieuThiModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-body text-center p-4 pb-3">
+                <div class="soft-modal-icon mb-3">
+                    <i class="bi bi-shop-window"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Thông báo chuyển siêu thị nhập hàng</h5>
+                <p class="text-secondary mb-0" id="changeSieuThiModalMessage" style="line-height: 1.5;">
+                    Chuyển siêu thị nhập hàng sẽ xóa danh sách sản phẩm đang chọn và tải lại sản phẩm tồn kho theo siêu thị mới. Bạn có muốn tiếp tục không?
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light border px-4 fw-semibold" id="btnRejectChangeSieuThi">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark px-4 fw-bold" id="btnConfirmChangeSieuThi">
+                    <i class="bi bi-check-lg me-1"></i> Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            let spMap = {};
+            let chiTietList = [];
+            let previousMaST = $('#MaST').val() || '';
+            let pendingMaST = null;
+            let revertingMaST = false;
+
+            const changeStModalEl = document.getElementById('changeSieuThiModal');
+            const changeStModal = changeStModalEl ? bootstrap.Modal.getOrCreateInstance(changeStModalEl) : null;
+
+            function parseIntNumber(raw) {
+                if (raw === null || raw === undefined) return 0;
+                const cleaned = String(raw).replace(/[^\d-]/g, '');
+                const parsed = parseInt(cleaned, 10);
+                return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+            }
+
+            function formatDong(num) {
+                return parseIntNumber(num).toLocaleString('vi-VN') + ' ₫';
+            }
+
+            function getDatePartFromInput() {
+                const rawDt = $('#NgayNhap').val();
+                if (rawDt && /^\d{4}-\d{2}-\d{2}/.test(rawDt)) {
+                    const parts = rawDt.slice(0, 10).split('-');
+                    return parts[2] + parts[1] + parts[0];
+                }
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = String(now.getFullYear());
+                return dd + mm + yyyy;
+            }
+
+            function extractRawDigits(val) {
+                if (!val) return '';
+                const str = String(val).trim();
+                const match = str.match(/^PN\d{8}-(\d{1,5})$/i);
+                if (match) {
+                    return String(parseInt(match[1], 10) || '');
+                }
+                return str.replace(/\D/g, '').slice(0, 5);
+            }
+
+            function buildMaPhieuFromDigits(digits) {
+                const cleaned = String(digits || '').replace(/\D/g, '').slice(0, 5);
+                if (!cleaned) return '';
+                const num = parseInt(cleaned, 10);
+                if (isNaN(num) || num <= 0) return '';
+                const padded = String(num).padStart(5, '0');
+                return 'PN' + getDatePartFromInput() + '-' + padded;
+            }
+
+            function syncMaPhieuField() {
+                const digits = extractRawDigits($('#SoPhieuInput').val() || $('#MaPN').val());
+                const formattedMaPN = buildMaPhieuFromDigits(digits);
+                $('#MaPN').val(formattedMaPN);
+                return formattedMaPN;
+            }
+
+            $('#SoPhieuInput').on('keydown', function (e) {
+                const allowedControlKeys = [
+                    'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+                    'ArrowLeft', 'ArrowRight', 'Home', 'End'
+                ];
+                if (allowedControlKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitPhieuNhapForm();
+                    return;
+                }
+                if (!/^\d$/.test(e.key)) {
+                    e.preventDefault();
+                    return;
+                }
+                const currentDigits = extractRawDigits($(this).val());
+                const selectedText = window.getSelection ? window.getSelection().toString() : '';
+                if (currentDigits.length >= 5 && !selectedText) {
+                    e.preventDefault();
+                }
+            });
+
+            $('#SoPhieuInput').on('focus', function () {
+                const digits = extractRawDigits($(this).val());
+                $(this).val(digits);
+            });
+
+            $('#SoPhieuInput').on('input', function () {
+                const digits = extractRawDigits($(this).val());
+                if ($(this).val() !== digits) {
+                    $(this).val(digits);
+                }
+                const formatted = buildMaPhieuFromDigits(digits);
+                $('#MaPN').val(formatted);
+            });
+
+            $('#SoPhieuInput').on('blur change', function () {
+                const formattedMaPN = syncMaPhieuField();
+                if (formattedMaPN) {
+                    $(this).val(formattedMaPN);
+                }
+            });
+
+            $('#NgayNhap').on('change', function () {
+                const formattedMaPN = syncMaPhieuField();
+                if (formattedMaPN) {
+                    $('#SoPhieuInput').val(formattedMaPN);
+                }
+            });
+
+            function applyTrangThaiColor() {
+                const val = $('#TrangThai').val();
+                const $select = $('#TrangThai');
+                const $iconBox = $('#trangThaiIconBox');
+
+                $select.removeClass('text-success text-danger');
+                $iconBox.removeClass('text-success text-danger');
+
+                if (val === '1') {
+                    $select.addClass('text-success');
+                    $iconBox.addClass('text-success');
+                } else {
+                    $select.addClass('text-danger');
+                    $iconBox.addClass('text-danger');
+                }
+            }
+
+            applyTrangThaiColor();
+            $('#TrangThai').on('change', applyTrangThaiColor);
+
+            $('.select2-lookup').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
+            $('.select2-sp').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Chọn sản phẩm nhập hàng',
+                allowClear: true
+            });
+
+            $('#addSoLuong, #addGiaNhap').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#btnAddChiTiet').trigger('click');
+                }
+            });
+
+            function populateProductDropdown(dsSP) {
+                spMap = {};
+                const $sel = $('#addMaSP');
+                $sel.empty().append(new Option('Chọn sản phẩm nhập hàng', '', false, false));
+
+                (dsSP || []).forEach(function (sp) {
+                    spMap[sp.MaSP] = sp;
+                    $sel.append(new Option(sp.MaSP + ' - ' + sp.TenSP, sp.MaSP, false, false));
+                });
+
+                $sel.val('').trigger('change');
+                $('#addTenSP').val('');
+                $('#addGiaNhap').val(formatDong(0));
+            }
+
+            function loadProductsBySieuThi(maST) {
+                if (!maST) {
+                    populateProductDropdown([]);
+                    return;
+                }
+
+                $.get('@Url.Action("LaySanPhamTheoSieuThi", "NhapHang")', { maST: maST })
+                    .done(function (data) {
+                        populateProductDropdown(data);
+                    })
+                    .fail(function () {
+                        populateProductDropdown([]);
+                    });
+            }
+
+            const initialProducts = @Html.Raw(danhSachSanPhamJson);
+            populateProductDropdown(initialProducts);
+
+            function applySieuThiChange(newMaST) {
+                previousMaST = newMaST;
+                chiTietList = [];
+                renderChiTietTable();
+                loadProductsBySieuThi(newMaST);
+            }
+
+            $('#MaST').on('change', function () {
+                if (revertingMaST) {
+                    revertingMaST = false;
+                    return;
+                }
+
+                const newMaST = $(this).val() || '';
+                if (newMaST === previousMaST) {
+                    return;
+                }
+
+                if (chiTietList.length > 0 && changeStModal) {
+                    pendingMaST = newMaST;
+                    changeStModal.show();
+                } else {
+                    applySieuThiChange(newMaST);
+                }
+            });
+
+            $('#btnConfirmChangeSieuThi').on('click', function () {
+                const targetST = pendingMaST ?? '';
+                pendingMaST = null;
+                if (changeStModal) changeStModal.hide();
+                applySieuThiChange(targetST);
+            });
+
+            function cancelChangeSieuThi() {
+                pendingMaST = null;
+                if (changeStModal) changeStModal.hide();
+                revertingMaST = true;
+                $('#MaST').val(previousMaST).trigger('change');
+            }
+
+            $('#btnRejectChangeSieuThi, #btnCancelChangeSieuThi').on('click', cancelChangeSieuThi);
+
+            $('#addMaSP').on('change', function () {
+                const maSP = $(this).val();
+                const sp = spMap[maSP];
+                $('#addTenSP').val(sp ? sp.TenSP : '');
+                if (sp && typeof sp.GiaNhap !== 'undefined') {
+                    $('#addGiaNhap').val(formatDong(sp.GiaNhap));
+                } else {
+                    $('#addGiaNhap').val(formatDong(0));
+                }
+            });
+
+            $('.currency-input').on('focus', function () {
+                const num = parseIntNumber($(this).val());
+                $(this).val(num > 0 ? String(num) : '');
+            });
+
+            $('.currency-input').on('input', function () {
+                $(this).val(String($(this).val()).replace(/\D/g, ''));
+            });
+
+            $('.currency-input').on('blur change', function () {
+                $(this).val(formatDong($(this).val()));
+            });
+
+            function syncHiddenJson() {
+                $('#chiTietJson').val(JSON.stringify(chiTietList.map(x => ({
+                    MaSP: x.MaSP,
+                    SoLuongNhap: x.SoLuongNhap,
+                    DonGiaNhap: x.DonGiaNhap
+                }))));
+            }
+
+            function renderChiTietTable() {
+                const $tbody = $('#chiTietBody');
+                $tbody.empty();
+
+                let tongTien = 0;
+
+                if (chiTietList.length === 0) {
+                    $tbody.append(
+                        '<tr id="emptyChiTietRow"><td colspan="7" class="text-center text-muted py-3">Chưa có sản phẩm nào trong phiếu nhập.</td></tr>'
+                    );
+                } else {
+                    chiTietList.forEach(function (item, idx) {
+                        const thanhTien = item.SoLuongNhap * item.DonGiaNhap;
+                        tongTien += thanhTien;
+
+                        $tbody.append(
+                            '<tr>' +
+                            '<td class="text-center fw-semibold text-muted">' + (idx + 1) + '</td>' +
+                            '<td class="fw-bold text-success text-nowrap">' + $('<div>').text(item.MaSP).html() + '</td>' +
+                            '<td class="fw-semibold text-dark">' + $('<div>').text(item.TenSP).html() + '</td>' +
+                            '<td class="text-end">' +
+                            '<input type="number" min="1" step="1" class="form-control form-control-sm text-end fw-semibold row-qty-input inline-qty-input" data-index="' + idx + '" value="' + item.SoLuongNhap + '" />' +
+                            '</td>' +
+                            '<td class="text-end">' +
+                            '<input type="text" inputmode="numeric" class="form-control form-control-sm text-end fw-semibold row-price-input inline-price-input" data-index="' + idx + '" value="' + formatDong(item.DonGiaNhap) + '" autocomplete="off" />' +
+                            '</td>' +
+                            '<td class="text-end fw-bold text-primary row-subtotal" data-index="' + idx + '">' + formatDong(thanhTien) + '</td>' +
+                            '<td class="text-center">' +
+                            '<button type="button" class="btn btn-sm btn-outline-danger btn-remove-ct" data-index="' + idx + '" title="Xóa dòng">' +
+                            '<i class="bi bi-trash"></i>' +
+                            '</button>' +
+                            '</td>' +
+                            '</tr>'
+                        );
+                    });
+                }
+
+                $('#tongTienDisplay').text(formatDong(tongTien));
+                syncHiddenJson();
+            }
+
+            function recalculateTotalsOnly() {
+                let tongTien = 0;
+                chiTietList.forEach(function (item, idx) {
+                    const thanhTien = item.SoLuongNhap * item.DonGiaNhap;
+                    tongTien += thanhTien;
+                    $('.row-subtotal[data-index="' + idx + '"]').text(formatDong(thanhTien));
+                });
+                $('#tongTienDisplay').text(formatDong(tongTien));
+                syncHiddenJson();
+            }
+
+            $('#chiTietTable').on('input change', '.row-qty-input', function () {
+                const idx = parseInt($(this).data('index'), 10);
+                if (isNaN(idx) || !chiTietList[idx]) return;
+                let qty = parseInt($(this).val(), 10);
+                if (isNaN(qty) || qty < 1) {
+                    qty = 1;
+                }
+                chiTietList[idx].SoLuongNhap = qty;
+                if ($(this).is(':focusout') || $(this).attr('type') === 'number') {
+                    $(this).val(qty);
+                }
+                recalculateTotalsOnly();
+            });
+
+            $('#chiTietTable').on('focus', '.row-price-input', function () {
+                const idx = parseInt($(this).data('index'), 10);
+                if (isNaN(idx) || !chiTietList[idx]) return;
+                $(this).val(chiTietList[idx].DonGiaNhap > 0 ? String(chiTietList[idx].DonGiaNhap) : '');
+            });
+
+            $('#chiTietTable').on('input', '.row-price-input', function () {
+                const idx = parseInt($(this).data('index'), 10);
+                if (isNaN(idx) || !chiTietList[idx]) return;
+                const cleaned = String($(this).val()).replace(/\D/g, '');
+                $(this).val(cleaned);
+                chiTietList[idx].DonGiaNhap = parseIntNumber(cleaned);
+                recalculateTotalsOnly();
+            });
+
+            $('#chiTietTable').on('blur change', '.row-price-input', function () {
+                const idx = parseInt($(this).data('index'), 10);
+                if (isNaN(idx) || !chiTietList[idx]) return;
+                const price = parseIntNumber($(this).val());
+                chiTietList[idx].DonGiaNhap = price;
+                $(this).val(formatDong(price));
+                recalculateTotalsOnly();
+            });
+
+            $('#btnAddChiTiet').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const maSP = $('#addMaSP').val();
+                const soLuong = parseInt($('#addSoLuong').val(), 10) || 0;
+                const giaNhap = parseIntNumber($('#addGiaNhap').val());
+
+                if (!maSP) {
+                    $('#addMaSP').select2('open');
+                    return;
+                }
+                if (soLuong <= 0) {
+                    $('#addSoLuong').trigger('focus');
+                    return;
+                }
+
+                const sp = spMap[maSP];
+                const tenSP = sp ? sp.TenSP : maSP;
+                const existingIdx = chiTietList.findIndex(x => x.MaSP === maSP);
+                if (existingIdx >= 0) {
+                    chiTietList[existingIdx].SoLuongNhap += soLuong;
+                    chiTietList[existingIdx].DonGiaNhap = giaNhap;
+                } else {
+                    chiTietList.push({
+                        MaSP: maSP,
+                        TenSP: tenSP,
+                        SoLuongNhap: soLuong,
+                        DonGiaNhap: giaNhap
+                    });
+                }
+
+                $('#addMaSP').val('').trigger('change');
+                $('#addTenSP').val('');
+                $('#addSoLuong').val('');
+                $('#addGiaNhap').val(formatDong(0));
+                renderChiTietTable();
+            });
+
+            $('#chiTietTable').on('click', '.btn-remove-ct', function () {
+                const idx = parseInt($(this).data('index'), 10);
+                if (!isNaN(idx) && idx >= 0) {
+                    chiTietList.splice(idx, 1);
+                    renderChiTietTable();
+                }
+            });
+
+            try {
+                const parsed = JSON.parse($('#chiTietJson').val() || '[]');
+                if (Array.isArray(parsed)) {
+                    chiTietList = parsed.map(function (item) {
+                        const info = spMap[item.MaSP] || {};
+                        return {
+                            MaSP: item.MaSP,
+                            TenSP: info.TenSP || item.MaSP,
+                            SoLuongNhap: parseInt(item.SoLuongNhap, 10) || 0,
+                            DonGiaNhap: parseIntNumber(item.DonGiaNhap)
+                        };
+                    }).filter(x => x.MaSP && x.SoLuongNhap > 0);
+                }
+            } catch {
+                chiTietList = [];
+            }
+
+            const existingMaPN = $('#MaPN').val();
+            if (existingMaPN) {
+                const digits = extractRawDigits(existingMaPN);
+                const formatted = buildMaPhieuFromDigits(digits);
+                $('#MaPN').val(formatted);
+                $('#SoPhieuInput').val(formatted);
+            }
+
+            const clearModalEl = document.getElementById('clearFormConfirmModal');
+            const clearModal = clearModalEl ? bootstrap.Modal.getOrCreateInstance(clearModalEl) : null;
+
+            $('#btnResetForm').on('click', function () {
+                if (clearModal) clearModal.show();
+            });
+
+            $('#clearFormConfirmOk').on('click', function () {
+                if (clearModal) clearModal.hide();
+                $('#SoPhieuInput').val('');
+                $('#MaPN').val('');
+                @if (!gioiHanSieuThi)
+                {
+                        <text>
+                            revertingMaST = true;
+                            previousMaST = '';
+                            $('#MaST').val('').trigger('change');
+                            populateProductDropdown([]);
+                        </text>
+                }
+                $('#MaNCC').val('').trigger('change');
+                $('#TrangThai').val('0').trigger('change');
+                $('#addMaSP').val('').trigger('change');
+                $('#addTenSP').val('');
+                $('#addSoLuong').val('');
+                $('#addGiaNhap').val(formatDong(0));
+                chiTietList = [];
+                renderChiTietTable();
+            });
+
+            function prepareFormPayload() {
+                syncMaPhieuField();
+                $('#addGiaNhap').val(formatDong($('#addGiaNhap').val()));
+                $('.row-price-input').each(function () {
+                    const idx = parseInt($(this).data('index'), 10);
+                    if (!isNaN(idx) && chiTietList[idx]) {
+                        const price = parseIntNumber($(this).val());
+                        chiTietList[idx].DonGiaNhap = price;
+                        $(this).val(formatDong(price));
+                    }
+                });
+                syncHiddenJson();
+            }
+
+            function submitPhieuNhapForm() {
+                prepareFormPayload();
+                const formEl = document.getElementById('createPhieuNhapForm');
+                if (formEl) {
+                    formEl.submit();
+                }
+            }
+
+            $('#btnSavePhieuNhap').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                submitPhieuNhapForm();
+            });
+
+            $('#createPhieuNhapForm').on('submit', function () {
+                prepareFormPayload();
+            });
+
+            renderChiTietTable();
+        });
+    </script>
+}

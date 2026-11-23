@@ -1,0 +1,459 @@
+@using MiniMart.Web.Helpers
+
+@{
+    bool bare = ViewData["BareLayout"] as bool? == true;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - MiniMart Management</title>
+
+    <!-- FAVICON -->
+    <link rel="icon" type="image/x-icon" href="~/Images/Branding/favicon.ico" />
+
+    <script type="importmap"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS hệ thống -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/MiniMart.Web.styles.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+            body {
+                background-color: #f4f7f5;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                padding-top: 65px;
+                padding-bottom: 45px;
+            }
+
+            .navbar {
+                background: #ffffff !important;
+                box-shadow: 0 2px 15px rgba(0,0,0,0.05) !important;
+                z-index: 1030;
+            }
+
+            .nav-link {
+                font-weight: 500;
+                padding: 0.5rem 1rem !important;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+
+                .nav-link:hover {
+                    background-color: #e8f5e9;
+                    color: #198754 !important;
+                }
+
+            .banner-container {
+                width: 100%;
+                background-color: #ffffff;
+                overflow: hidden;
+                border-bottom: 4px solid #ffc107;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                line-height: 0;
+            }
+
+            .banner-img {
+                display: block;
+                width: 100%;
+                height: auto;
+            }
+
+            .main-content-card {
+                background: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+                border: none;
+                padding: 25px;
+                margin-top: 0;
+                position: relative;
+            }
+
+            .footer {
+                background-color: #ffffff !important;
+                border-top: 1px solid #dee2e6;
+                color: #6c757d;
+                z-index: 1020;
+            }
+
+            .modal {
+                z-index: 1055;
+            }
+
+            .modal-backdrop {
+                z-index: 1050;
+            }
+
+            body.modal-open .footer {
+                z-index: 1;
+            }
+
+            .soft-modal-icon {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background: #fff4d6;
+                color: #e0a100;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.9rem;
+            }
+
+            body.layout-bare {
+                margin: 0;
+                padding: 0;
+            }
+
+            .popup-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+            }
+
+            .popup-icon-danger {
+                background: #fde8ea;
+                color: #dc3545;
+            }
+
+            .popup-icon-warning {
+                background: #fff4d6;
+                color: #e0a100;
+            }
+
+            .popup-title {
+                margin: 0 0 4px;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #212529;
+            }
+
+            .popup-text {
+                margin: 0;
+                font-size: 0.9rem;
+                line-height: 1.45;
+                color: #6c757d;
+            }
+
+            .popup-btn {
+                min-width: 140px;
+                font-weight: 600;
+            }
+
+            @@media (max-width: 768px) {
+                .main-content-card {
+                    padding: 15px;
+                }
+
+                .navbar-nav {
+                    margin-left: 0 !important;
+                }
+            }
+    </style>
+</head>
+
+<body class="@(bare ? "layout-bare" : "")">
+
+    @if (bare)
+    {
+        @RenderBody()
+    }
+    else
+    {
+        <!-- HEADER - NAVIGATION -->
+        <header>
+            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom mb-0 py-2 fixed-top">
+                <div class="container-fluid px-4">
+                    <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                        <img src="~/Images/Branding/Minimart_Back Office_Logo_2.png"
+                             alt="MiniMart Backoffice Logo"
+                             style="height: 40px; width: auto; object-fit: contain;" />
+                    </a>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                        <ul class="navbar-nav flex-grow-1 ms-3">
+                            @if (Html.HasPermission("WEB_TONGQUAN"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                                        <i class="bi bi-grid-1x2-fill text-success me-1"></i> Tổng quan
+                                    </a>
+                                </li>
+                            }
+
+                            @if (Html.HasPermission("WEB_QUANLY"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="quanLyDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-building-gear text-success me-1"></i> Quản lý
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-2" aria-labelledby="quanLyDropdown">
+                                        @if (Html.HasPermission("WEB_QL_SIEUTHI"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="SieuThi" asp-action="Index"><i class="bi bi-shop-window me-2 text-success"></i> Siêu thị</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_QL_POS"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="POS" asp-action="Index"><i class="bi bi-pc-display me-2 text-success"></i> POS</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_QL_NHANVIEN"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="NhanVien" asp-action="Index"><i class="bi bi-people me-2 text-success"></i> Nhân viên</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_QL_NHACUNGCAP"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="NhaCungCap" asp-action="Index"><i class="bi bi-truck me-2 text-success"></i> Nhà cung cấp</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
+                            @if (Html.HasPermission("WEB_HANGHOA"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="hangHoaDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-box-seam text-success me-1"></i> Hàng hóa
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-2" aria-labelledby="hangHoaDropdown">
+                                        @if (Html.HasPermission("WEB_HH_DANHMUC"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="DanhMuc" asp-action="Index"><i class="bi bi-tags me-2 text-success"></i> Danh mục</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HH_SANPHAM"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="SanPham" asp-action="Index"><i class="bi bi-box me-2 text-success"></i> Sản phẩm</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HH_SANPHAMTONKHO"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="SanPhamTonKho" asp-action="Index"><i class="bi bi-boxes me-2 text-success"></i> Sản phẩm tồn kho</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HH_NHAPHANG"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="NhapHang" asp-action="Index"><i class="bi bi-file-earmark-plus me-2 text-success"></i> Nhập hàng</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HH_THUE"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="Thue" asp-action="Index"><i class="bi bi-receipt me-2 text-success"></i> Thuế</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
+                            @if (Html.HasPermission("WEB_BANHANG"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="banHangDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-cart-check text-success me-1"></i> Bán hàng
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-2" aria-labelledby="banHangDropdown">
+                                        @if (Html.HasPermission("WEB_QL_CA"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="CaBanHang" asp-action="Index"><i class="bi bi-clock-history me-2 text-success"></i> Ca bán hàng</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_QL_DONHANG"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="DonHang" asp-action="Index"><i class="bi bi-receipt-cutoff me-2 text-success"></i> Đơn hàng</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_QL_TRAHANG"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="TraHang" asp-action="Index"><i class="bi bi-arrow-counterclockwise me-2 text-success"></i> Lịch sử trả hàng</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
+                            <!-- KHÁCH HÀNG: Truy cập thẳng không có menu con / mũi tên -->
+                            @if (Html.HasPermission("WEB_KHACHHANG"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="KhachHang" asp-action="Index">
+                                        <i class="bi bi-people-fill text-success me-1"></i> Khách hàng
+                                    </a>
+                                </li>
+                            }
+
+                            <!-- THỐNG KÊ: Đầy đủ 4 menu con chuẩn xác -->
+                            @if (Html.HasPermission("WEB_THONGKE"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="thongKeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-bar-chart-fill text-success me-1"></i> Thống kê
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-2" aria-labelledby="thongKeDropdown">
+                                        @if (Html.HasPermission("WEB_TK_DOANHTHU"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="ThongKe" asp-action="DoanhThu"><i class="bi bi-currency-dollar me-2 text-success"></i> Thống kê doanh thu tổng hợp</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_TK_TRAHANG"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="ThongKe" asp-action="TraHang"><i class="bi bi-arrow-counterclockwise me-2 text-success"></i> Thống kê trả hàng</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_TK_TTDIEMTHUONG"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="ThongKe" asp-action="ThanhToanDiemThuong"><i class="bi bi-star-fill me-2 text-success"></i> Thống kê đơn hàng thanh toán điểm thưởng</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_TK_DONHANGKHTT"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="ThongKe" asp-action="DonHangKhachHangThanThiet"><i class="bi bi-award-fill me-2 text-success"></i> Thống kê đơn hàng theo khách hàng thân thiết</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+
+                            @if (Html.HasPermission("WEB_HETHONG"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="heThongDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-gear-wide-connected text-success me-1"></i> Hệ thống
+                                    </a>
+                                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-2" aria-labelledby="heThongDropdown">
+                                        @if (Html.HasPermission("WEB_HT_TAIKHOAN"))
+                                        {
+                                            <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-badge me-2 text-success"></i> Tài khoản của tôi</a></li>
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HT_VAITRO"))
+                                        {
+                                            <li><h6 class="dropdown-header text-uppercase fw-bold text-success" style="font-size: 0.75rem;">Phân quyền</h6></li>
+                                            <li><a class="dropdown-item py-2 ps-4" asp-controller="VaiTro" asp-action="Index"><i class="bi bi-shield-lock me-2 text-success"></i> Vai trò nhân viên</a></li>
+                                        }
+                                        @if (Html.HasPermission("WEB_HT_PTTT"))
+                                        {
+                                            <!-- <li><hr class="dropdown-divider my-1"></li> -->
+                                            <li><h6 class="dropdown-header text-uppercase fw-bold text-success" style="font-size: 0.75rem;">Cấu hình</h6></li>
+                                            <li><a class="dropdown-item py-2" asp-controller="PTThanhToan" asp-action="Index"><i class="bi bi-credit-card-2-front me-2 text-success"></i> Phương thức thanh toán</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+
+                        <!-- THÔNG TIN TÀI KHOẢN -->
+                        <ul class="navbar-nav ms-auto align-items-center">
+                            @if (Context.Session.GetString("TenDN") != null)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <div class="avatar-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 38px; height: 38px;">
+                                            <i class="bi bi-person-fill fs-5"></i>
+                                        </div>
+                                        <div class="d-flex flex-column text-start lh-sm me-1">
+                                            <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+                                                @Context.Session.GetString("HoTen")
+                                            </span>
+                                            <div class="mt-1">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" style="font-size: 0.7rem; font-weight: 600;">
+                                                    @Context.Session.GetString("ChucVu")
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3 py-2" style="min-width: 280px;" aria-labelledby="profileDropdown">
+                                        <li class="px-3 py-2 border-bottom mb-1 bg-light">
+                                            <div class="d-flex align-items-start">
+                                                <i class="bi bi-building-fill text-success me-2 mt-1"></i>
+                                                <div class="lh-sm">
+                                                    <div class="text-secondary small fw-semibold" style="margin-bottom: 6px;">
+                                                        Siêu thị trực thuộc
+                                                    </div>
+                                                    <div class="fw-bold text-dark small">
+                                                        @Context.Session.GetString("TenST")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item py-2 text-secondary small" asp-controller="Account" asp-action="Profile">
+                                                <i class="bi bi-person-badge me-2 text-success"></i> Thông tin tài khoản
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider my-1"></li>
+                                        <li>
+                                            <a class="dropdown-item py-2 text-danger small" asp-controller="Account" asp-action="Logout">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- BANNER -->
+        <div class="banner-container">
+            <img src="~/Images/Branding/Minimart_Banner.png" class="banner-img" alt="MiniMart Banner System" />
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <main class="container-fluid px-4 pb-5 mb-5" style="margin-top: 15px;">
+            <div class="main-content-card">
+                @RenderBody()
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="border-top footer text-muted bg-white position-fixed bottom-0 w-100 py-2">
+            <div class="container-fluid text-center small">
+                &copy; 2026 - MiniMart System - Nền tảng điều hành chuỗi siêu thị bán lẻ thông minh
+            </div>
+        </footer>
+    }
+
+    <!-- NHÚNG BỘ POPUP DÙNG CHUNG -->
+    <partial name="_SharedPopups" />
+
+    <!-- SCRIPTS KÍCH HOẠT TỰ ĐỘNG -->
+    @if (TempData["ShowLoginErrorModal"] as bool? == true)
+    {
+        <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    var loginModal = new bootstrap.Modal(document.getElementById('loginErrorModal'));
+                    loginModal.show();
+                });
+        </script>
+    }
+
+    @if (Context.Session.GetString("ShowDirectLinkError") == "true")
+    {
+        Context.Session.Remove("ShowDirectLinkError");
+        <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    var directModal = new bootstrap.Modal(document.getElementById('directLinkErrorModal'));
+                    directModal.show();
+                });
+        </script>
+    }
+
+    <!-- JAVASCRIPT -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

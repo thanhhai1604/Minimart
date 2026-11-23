@@ -1,0 +1,159 @@
+﻿@using MiniMart.Web.Helpers
+
+<!-- 1. Popup không có phân quyền khi login -->
+<div class="modal fade" id="loginErrorModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-danger text-white py-2 px-3">
+                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-shield-exclamation me-2"></i> Thông báo đăng nhập</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3 text-center">
+                <div class="popup-icon popup-icon-danger mb-2">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                </div>
+                <h6 class="popup-title">Tài khoản không có quyền truy cập!</h6>
+                <p class="popup-text">
+                    Tài khoản của bạn đã bị khóa, ngừng hoạt động hoặc không được phân quyền quản trị Back Office!<br />
+                    Vui lòng liên hệ quản trị viên để kiểm tra quyền truy cập của tài khoản!
+                </p>
+            </div>
+            <div class="modal-footer bg-light border-0 justify-content-center py-2">
+                <button type="button" class="btn btn-danger popup-btn px-4" data-bs-dismiss="modal">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Popup không có quyền khi truy cập bằng directlink -->
+<div class="modal fade" id="directLinkErrorModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-warning text-dark py-2 px-3">
+                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cảnh báo bảo mật hệ thống!</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3 text-center">
+                <div class="popup-icon popup-icon-warning mb-2">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <h6 class="popup-title">Không có quyền truy cập chức năng!</h6>
+                <p class="popup-text">
+                    Bạn không có quyền truy cập chức năng này.<br />
+                    Vui lòng liên hệ quản trị viên để kiểm tra quyền truy cập hoặc sử dụng tài khoản khác!
+                </p>
+            </div>
+            <div class="modal-footer bg-light border-0 justify-content-center py-2 gap-2">
+                <button type="button" class="btn btn-success popup-btn px-4"
+                        onclick="window.location.href='@(Html.HasPermission("WEB_TONGQUAN") ? Url.Action("Index", "Home") : Url.Action("Profile", "Account"))'">
+                    <i class="bi bi-check-lg me-1"></i> Đồng ý
+                </button>
+                <button type="button" class="btn btn-outline-danger popup-btn px-4"
+                        onclick="window.location.href='@Url.Action("Logout", "Account")'">
+                    <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Popup chặn không cho xem chi tiết -->
+<div class="modal fade" id="permissionErrorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-warning text-dark py-2 px-3">
+                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cảnh báo phân quyền</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3 text-center">
+                <div class="popup-icon popup-icon-warning mb-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <h6 class="popup-title">Không có quyền truy cập!</h6>
+                <p class="popup-text">
+                    Bạn không có quyền xem thông tin chi tiết!<br />
+                    Vui lòng liên hệ quản trị viên để kiểm tra quyền truy cập!
+                </p>
+            </div>
+            <div class="modal-footer bg-light border-0 justify-content-center py-2">
+                <button type="button" class="btn btn-warning text-dark popup-btn px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-check-lg me-1"></i> Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Popup Khôi phục ban đầu -->
+<div class="modal fade" id="softConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-body text-center p-4 pb-3">
+                <div class="soft-modal-icon mb-3">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Khôi phục dữ liệu ban đầu?</h5>
+                <p class="text-secondary mb-0" style="line-height: 1.5;">
+                    Các thay đổi chưa lưu sẽ bị hủy và dữ liệu sẽ được khôi phục về như lúc mới mở trang này.
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light border px-4 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark px-4 fw-bold" id="softConfirmOk">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. Popup Xóa nhập liệu -->
+<div class="modal fade" id="clearFormConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-body text-center p-4 pb-3">
+                <div class="soft-modal-icon mb-3">
+                    <i class="bi bi-eraser-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Xóa toàn bộ nhập liệu?</h5>
+                <p class="text-secondary mb-0" style="line-height: 1.5;">
+                    Thông tin bạn đã nhập sẽ được xóa để nhập lại từ đầu.
+                </p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light border px-4 fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark px-4 fw-bold" id="clearFormConfirmOk">
+                    <i class="bi bi-eraser me-1"></i> Xóa nhập liệu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- POPUP #6: LỖI RÀNG BUỘC KHÓA NGOẠI KHI XÓA DỮ LIỆU -->
+<div class="modal fade" id="foreignKeyDeleteErrorModal" tabindex="-1" aria-labelledby="foreignKeyDeleteErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-danger text-white py-3 px-4">
+                <h5 class="modal-title fw-bold mb-0" id="foreignKeyDeleteErrorModalLabel">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i> Không thể xóa dữ liệu!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-dark mb-2" id="foreignKeyDeleteErrorMessage">
+                    Không thể xóa bản ghi này vì đang có dữ liệu liên quan trong hệ thống!
+                </p>
+                <p class="text-muted small mb-0">
+                    Vui lòng kiểm tra và xử lý các dữ liệu tham chiếu liên quan trước khi thực hiện xóa.
+                </p>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 py-3">
+                <button type="button" class="btn btn-danger fw-bold px-4 shadow-sm" data-bs-dismiss="modal">
+                    Đồng ý
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

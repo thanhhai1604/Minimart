@@ -1,0 +1,234 @@
+﻿@model MiniMart.Web.Models.SanPham
+@using MiniMart.Web.Helpers
+
+@{
+    ViewData["Title"] = "Cập nhật sản phẩm";
+    bool coSua = Html.HasPermission("WEB_HH_SP_SUA");
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0 text-success" style="color: #198754 !important;">
+                Cập Nhật Sản Phẩm
+            </h3>
+            <p class="text-success fw-bold small mb-0">
+                Chỉnh sửa thông tin chi tiết hàng hóa trong hệ thống
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (coSua)
+            {
+                <button type="button" id="btnResetEdit" class="btn btn-outline-secondary fw-semibold shadow-sm">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Khôi phục ban đầu
+                </button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary fw-semibold shadow-sm scalable back">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small mb-3" role="alert"></div>
+
+                        <input type="hidden" asp-for="MaSP" />
+
+                        <fieldset disabled="@(!coSua)">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small text-secondary">Mã Sản Phẩm</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="bi bi-code-square"></i></span>
+                                    <input type="text" class="form-control bg-light border-start-0 ps-0 text-muted" value="@Model.MaSP" disabled />
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="UPC" class="form-label fw-semibold small text-secondary">Mã UPC <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-upc-scan"></i></span>
+                                    <input asp-for="UPC" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập mã vạch UPC..." autocomplete="off" id="UPC" />
+                                </div>
+                                <span asp-validation-for="UPC" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="TenSP" class="form-label fw-semibold small text-secondary">Tên Sản Phẩm <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-box"></i></span>
+                                    <input asp-for="TenSP" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập tên sản phẩm..." autocomplete="off" id="TenSP" />
+                                </div>
+                                <span asp-validation-for="TenSP" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DonViTinh" class="form-label fw-semibold small text-secondary">Đơn Vị Tính</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-ui-checks"></i></span>
+                                    <input asp-for="DonViTinh" class="form-control bg-light border-start-0 ps-0" placeholder="Ví dụ: Thùng, Lốc..." autocomplete="off" id="DonViTinh" />
+                                </div>
+                                <span asp-validation-for="DonViTinh" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LoaiSP" class="form-label fw-semibold small text-secondary">Loại Sản Phẩm</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-tags"></i></span>
+                                    <input asp-for="LoaiSP" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập loại sản phẩm..." autocomplete="off" id="LoaiSP" />
+                                </div>
+                                <span asp-validation-for="LoaiSP" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="MaDM" class="form-label fw-semibold small text-secondary">Danh Mục Hàng Hóa</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-folder"></i></span>
+                                    <select asp-for="MaDM" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachDanhMuc" id="selectMaDM">
+                                        <option value="">-- Chọn danh mục sản phẩm --</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="MaDM" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label asp-for="MaThue" class="form-label fw-semibold small text-secondary">Mức Thuế Áp Dụng</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-success"><i class="bi bi-receipt"></i></span>
+                                    <select asp-for="MaThue" class="form-select bg-light border-start-0" asp-items="ViewBag.DanhSachThue" id="selectMaThue">
+                                        <option value="">-- Chọn mức thuế --</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="MaThue" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        </fieldset>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                            <div>
+                                @if (Html.HasPermission("WEB_HH_SP_XOA"))
+                                {
+                                    <button type="button" class="btn btn-danger text-white fw-bold shadow-sm px-3" id="btnOpenDeleteModal">
+                                        <i class="bi bi-trash me-1"></i> Xóa sản phẩm
+                                    </button>
+                                }
+                            </div>
+
+                            <div>
+                                @if (coSua)
+                                {
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Html.HasPermission("WEB_HH_SP_XOA"))
+{
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-3">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa sản phẩm!</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary mb-3">Bạn chắc chắn muốn xóa sản phẩm sau khỏi hệ thống?</p>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">Mã sản phẩm: <span class="text-dark fw-bold">@Model.MaSP</span></li>
+                            <li class="mb-2">Mã UPC: <span class="text-dark fw-bold">@Model.UPC</span></li>
+                            <li class="mb-2">Tên sản phẩm: <span class="text-dark fw-bold">@Model.TenSP</span></li>
+                            <li class="mb-2">Danh mục: <span class="text-primary fw-bold">@(Model.DanhMucNavigation != null ? Model.DanhMucNavigation.TenDanhMuc : "---")</span></li>
+                            <li class="mb-0">Thuế: <span class="text-dark fw-bold">@(Model.ThueNavigation != null ? Model.ThueNavigation.TenThue : "---")</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-3 fw-bold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <form asp-action="Delete" asp-route-id="@Model.MaSP" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger text-white px-4 fw-bold shadow-sm">
+                            <i class="bi bi-trash me-1"></i> Xác nhận
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(document).ready(function () {
+            const initialValues = {
+                UPC: $('#UPC').val(),
+                TenSP: $('#TenSP').val(),
+                DonViTinh: $('#DonViTinh').val(),
+                LoaiSP: $('#LoaiSP').val(),
+                MaDM: $('#selectMaDM').val(),
+                MaThue: $('#selectMaThue').val()
+            };
+
+            const softModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('softConfirmModal'));
+
+            $('#btnResetEdit').on('click', function () {
+                softModal.show();
+            });
+
+            $('#softConfirmOk').on('click', function () {
+                softModal.hide();
+                $('#UPC').val(initialValues.UPC);
+                $('#TenSP').val(initialValues.TenSP);
+                $('#DonViTinh').val(initialValues.DonViTinh);
+                $('#LoaiSP').val(initialValues.LoaiSP);
+                $('#selectMaDM').val(initialValues.MaDM);
+                $('#selectMaThue').val(initialValues.MaThue);
+            });
+
+            const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+            const deleteModalElement = document.getElementById('deleteConfirmModal');
+            if (btnOpenDeleteModal && deleteModalElement) {
+                const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+                btnOpenDeleteModal.addEventListener('click', function () { deleteModal.show(); });
+            }
+
+            @if (TempData["ForeignKeyDeleteError"] != null)
+            {
+                <text>
+                const fkModalEl = document.getElementById('foreignKeyDeleteErrorModal');
+                if (fkModalEl) {
+                    const msgEl = document.getElementById('foreignKeyDeleteErrorMessage');
+                    if (msgEl) {
+                        msgEl.textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["ForeignKeyDeleteError"]!.ToString()));
+                    }
+                    bootstrap.Modal.getOrCreateInstance(fkModalEl).show();
+                }
+                </text>
+            }
+        });
+    </script>
+}
